@@ -1,0 +1,16 @@
+{
+  "appName": "Open Ranking",
+  "adminAppName": "Open Ranking Admin",
+  "backToLeaderboard": "Back to Leaderboard",
+  "signIn": "Sign in",
+  "signInAsAdmin": "Sign in as Admin",
+  "loading": "Loading...",
+  "noData": "No data available",
+  "landing": {
+    "instructions": "Use the link shared by your studio to view the leaderboard.",
+    "pasteLinkLabel": "Paste your competition link",
+    "pasteLinkPlaceholder": "https://.../home/open-2025-abc123",
+    "goToLeaderboard": "Go to leaderboard"
+  }
+}
+

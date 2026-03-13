@@ -1,0 +1,16 @@
+{
+  "appName": "Open Ranking",
+  "adminAppName": "Open Ranking Admin",
+  "backToLeaderboard": "Voltar para o leaderboard",
+  "signIn": "Entrar",
+  "signInAsAdmin": "Entrar como administrador",
+  "loading": "Carregando...",
+  "noData": "Nenhum dado disponível",
+  "landing": {
+    "instructions": "Use o link compartilhado pelo seu estúdio para ver o leaderboard.",
+    "pasteLinkLabel": "Cole o link da sua competição",
+    "pasteLinkPlaceholder": "https://.../home/open-2025-abc123",
+    "goToLeaderboard": "Ir para o leaderboard"
+  }
+}
+

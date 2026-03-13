@@ -1,0 +1,19 @@
+services:
+  db:
+    environment:
+      POSTGRES_DB: open_ranking_dev
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - db_data_dev:/var/lib/postgresql/data
+
+  backend:
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/open_ranking_dev
+      JWT_SECRET_KEY: change-me-in-dev
+      INITIAL_ADMIN_EMAIL: admin@open-ranking.com
+      INITIAL_ADMIN_PASSWORD: admin123
+
+volumes:
+  db_data_dev:
+

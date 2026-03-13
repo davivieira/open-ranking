@@ -1,0 +1,32 @@
+{
+  "title": "{{competition}} – Leaderboard",
+  "filters": {
+    "stage": "Etapa (Fase)",
+    "level": "Categoria",
+    "gender": "Gênero",
+    "eventOptional": "Evento (opcional)"
+  },
+  "placeholders": {
+    "selectStage": "Selecione a etapa",
+    "allEvents": "Todos os eventos"
+  },
+  "gender": {
+    "male": "Masculino",
+    "female": "Feminino"
+  },
+  "errors": {
+    "noCompetitionSpecified": "Nenhuma competição especificada",
+    "competitionNotFound": "Competição não encontrada",
+    "failedToLoad": "Falha ao carregar leaderboard"
+  },
+  "table": {
+    "rank": "Colocação",
+    "athletes": "Atleta(s)",
+    "totalPoints": "Pontos totais",
+    "events": "Eventos"
+  },
+  "empty": {
+    "noScores": "Ainda não há resultados para esta combinação."
+  }
+}
+
