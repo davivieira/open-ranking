@@ -192,7 +192,7 @@ export const LeaderboardPage = () => {
     return "";
   };
 
-  const handleExport = async (format: "csv" | "json") => {
+  const handleExport = async (format: "csv") => {
     if (!competition || !phaseId) return;
     const params = new URLSearchParams({
       competition_id: String(competition.id),
@@ -326,9 +326,6 @@ export const LeaderboardPage = () => {
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => handleExport("csv")}>
                   Export CSV
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => handleExport("json")}>
-                  Export JSON
                 </Button>
               </HStack>
             )}

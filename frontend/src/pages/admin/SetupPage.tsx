@@ -251,6 +251,12 @@ export const SetupPage = () => {
     }
   }, [eventPhaseId, phasesForEventForm, eventType, eventGenderCategory]);
 
+  useEffect(() => {
+    if (eventType === "SINGLES" && eventGenderCategory === "MIXED") {
+      setEventGenderCategory("MALE");
+    }
+  }, [eventType, eventGenderCategory]);
+
   // Keep edit event type in sync with the phase's allowed modes.
   useEffect(() => {
     if (!editTarget || editTarget.type !== "event" || !editTarget.phaseId) return;
@@ -266,6 +272,12 @@ export const SetupPage = () => {
       setEditEventType("DOUBLES");
     }
   }, [editTarget, editEventType, editGenderCategory, tree]);
+
+  useEffect(() => {
+    if (editEventType === "SINGLES" && editGenderCategory === "MIXED") {
+      setEditGenderCategory("MALE");
+    }
+  }, [editEventType, editGenderCategory]);
 
   const handleCreateCompetition = async (e: FormEvent) => {
     e.preventDefault();
@@ -327,7 +339,7 @@ export const SetupPage = () => {
           name: eventName,
           description: eventDescription || null,
           event_type: eventType,
-          gender_category: eventGenderCategory,
+          gender_category: eventType === "SINGLES" && eventGenderCategory === "MIXED" ? "MALE" : eventGenderCategory,
         },
         opts,
       );
@@ -459,7 +471,7 @@ export const SetupPage = () => {
             description: editDescription || null,
             order_index: editOrder,
             event_type: editEventType,
-            gender_category: editGenderCategory,
+            gender_category: editEventType === "SINGLES" && editGenderCategory === "MIXED" ? "MALE" : editGenderCategory,
           },
           opts,
         );
