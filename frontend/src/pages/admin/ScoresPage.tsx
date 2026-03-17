@@ -13,7 +13,14 @@ import {
   FormLabel,
   Heading,
   Input,
+  Modal,
+  ModalBody,
+  ModalContent,
+  ModalFooter,
+  ModalHeader,
+  ModalOverlay,
   Select,
+  Show,
   Stack,
   Table,
   Tbody,
@@ -85,6 +92,12 @@ export const ScoresPage = () => {
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const mobileScoreActionsDisclosure = useDisclosure();
+  const [mobileScoreActionsTarget, setMobileScoreActionsTarget] = useState<{
+    id: number;
+    athlete: { name: string };
+    partner?: { name: string } | null;
+  } | null>(null);
 
   const { scores, isLoading, error, fetchScores, addScore, deleteScore } = useScoresStore();
   const opts = { token: accessToken };
@@ -702,7 +715,8 @@ export const ScoresPage = () => {
         <Heading size="md" mb={4}>
           {t("scores.table.title")}
         </Heading>
-        <Table variant="simple" size="md">
+        <Show above="md">
+          <Table variant="simple" size="md">
             <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
               <Tr>
                 <Th>{t("scores.table.columns.rank")}</Th>
@@ -714,44 +728,112 @@ export const ScoresPage = () => {
               </Tr>
             </Thead>
             <Tbody>
-            {scores.map((score) => (
-              <Tr key={score.id}>
-                <Td>{score.rank_within_level ?? "-"}</Td>
-                <Td>
-                  {score.athlete.name}
-                  {score.partner ? ` / ${score.partner.name}` : ""}
-                </Td>
-                <Td>{score.level}</Td>
-                <Td>
-                  {score.time_seconds != null
-                    ? formatSeconds(score.time_seconds)
-                    : score.reps_points != null
-                      ? t("scores.table.values.pointsSuffix", { points: score.reps_points })
-                      : t("common.emptyDash")}
-                </Td>
-                <Td isNumeric>{score.points_awarded ?? "-"}</Td>
-                <Td>
-                  {!isViewer && (
-                    <Button
-                      size="sm"
-                      colorScheme="red"
-                      variant="outline"
-                      onClick={() => openDelete(score)}
-                    >
-                      {t("common.actions.delete")}
-                    </Button>
-                  )}
-                </Td>
+              {scores.map((score) => (
+                <Tr key={score.id}>
+                  <Td>{score.rank_within_level ?? "-"}</Td>
+                  <Td>
+                    {score.athlete.name}
+                    {score.partner ? ` / ${score.partner.name}` : ""}
+                  </Td>
+                  <Td>{score.level}</Td>
+                  <Td>
+                    {score.time_seconds != null
+                      ? formatSeconds(score.time_seconds)
+                      : score.reps_points != null
+                        ? t("scores.table.values.pointsSuffix", { points: score.reps_points })
+                        : t("common.emptyDash")}
+                  </Td>
+                  <Td isNumeric>{score.points_awarded ?? "-"}</Td>
+                  <Td>
+                    {!isViewer && (
+                      <Button
+                        size="sm"
+                        colorScheme="red"
+                        variant="outline"
+                        onClick={() => openDelete(score)}
+                      >
+                        {t("common.actions.delete")}
+                      </Button>
+                    )}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Show>
+        <Show below="md">
+          <Table variant="simple" size="md">
+            <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
+              <Tr>
+                <Th>{t("scores.table.columns.athlete")}</Th>
+                <Th>{t("scores.table.columns.timeOrPoints")}</Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {scores.map((score) => (
+                <Tr
+                  key={score.id}
+                  cursor={!isViewer ? "pointer" : "default"}
+                  onClick={() => {
+                    if (isViewer) return;
+                    setMobileScoreActionsTarget(score);
+                    mobileScoreActionsDisclosure.onOpen();
+                  }}
+                >
+                  <Td>
+                    {score.athlete.name}
+                    {score.partner ? ` / ${score.partner.name}` : ""}
+                  </Td>
+                  <Td>
+                    {score.time_seconds != null
+                      ? formatSeconds(score.time_seconds)
+                      : score.reps_points != null
+                        ? t("scores.table.values.pointsSuffix", { points: score.reps_points })
+                        : t("common.emptyDash")}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </Show>
         {!scores.length && !isLoading && (
           <Box mt={2} color="gray.400">
             {t("scores.table.empty")}
           </Box>
         )}
       </Box>
+
+      <Modal
+        isOpen={mobileScoreActionsDisclosure.isOpen}
+        onClose={mobileScoreActionsDisclosure.onClose}
+        isCentered
+      >
+        <ModalOverlay />
+        <ModalContent bg="brand.card" color="white">
+          <ModalHeader>
+            {mobileScoreActionsTarget
+              ? mobileScoreActionsTarget.partner
+                ? `${mobileScoreActionsTarget.athlete.name} / ${mobileScoreActionsTarget.partner.name}`
+                : mobileScoreActionsTarget.athlete.name
+              : ""}
+          </ModalHeader>
+          <ModalBody>{t("scores.table.columns.actions")}</ModalBody>
+          <ModalFooter>
+            {!isViewer && mobileScoreActionsTarget && (
+              <Button
+                colorScheme="red"
+                variant="outline"
+                onClick={() => {
+                  mobileScoreActionsDisclosure.onClose();
+                  openDelete(mobileScoreActionsTarget);
+                }}
+              >
+                {t("common.actions.delete")}
+              </Button>
+            )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <AlertDialog
         isOpen={deleteDisclosure.isOpen}
