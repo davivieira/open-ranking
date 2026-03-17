@@ -20,7 +20,8 @@ app = FastAPI(title="Open Ranking API", version="0.1.0")
 def _cors_origins() -> list[str]:
   raw = os.getenv("CORS_ORIGINS", "").strip()
   if not raw:
-    return ["http://localhost:3000"]
+    # Local dev defaults. In prod, set CORS_ORIGINS explicitly.
+    return ["http://localhost:3000", "http://localhost:5173"]
   return [o.strip() for o in raw.split(",") if o.strip()]
 
 app.add_middleware(
