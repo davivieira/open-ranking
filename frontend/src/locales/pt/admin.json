@@ -88,6 +88,12 @@
     "info": {
       "eventFinished": "Este evento foi finalizado; não é possível adicionar mais resultados."
     },
+    "errors": {
+      "duplicateSingles": "Este atleta já tem um resultado cadastrado para este evento.",
+      "duplicatePair": "Esta dupla já tem um resultado cadastrado para este evento.",
+      "athleteAlreadyInDoubles": "Um destes atletas já está participando de outra dupla neste evento.",
+      "duplicateGeneric": "Este resultado já existe."
+    },
     "actions": {
       "saveScore": "Salvar resultado",
       "saving": "Salvando..."

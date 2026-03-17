@@ -213,6 +213,28 @@ class Score(Base, TimestampMixin):
   phase: Mapped["Phase"] = relationship(back_populates="scores")
   event: Mapped["Event"] = relationship(back_populates="scores")
 
+  __table_args__ = (
+    # Prevent duplicate scores for the same event/level/athlete(+partner).
+    UniqueConstraint(
+      "event_id",
+      "level",
+      "athlete_id",
+      "partner_id",
+      name="uq_score_event_level_athlete_partner",
+    ),
+  )
+
+  __table_args__ = (
+    # Prevent exact duplicate scores for the same event/level/athlete pair.
+    UniqueConstraint(
+      "event_id",
+      "level",
+      "athlete_id",
+      "partner_id",
+      name="uq_score_event_level_athlete_partner",
+    ),
+  )
+
 
 class User(Base, TimestampMixin):
   __tablename__ = "users"

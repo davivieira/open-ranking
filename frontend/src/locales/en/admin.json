@@ -88,6 +88,12 @@
     "info": {
       "eventFinished": "This event is finished; no more scores can be added."
     },
+    "errors": {
+      "duplicateSingles": "This athlete already has a score for this event.",
+      "duplicatePair": "This pair already has a score for this event.",
+      "athleteAlreadyInDoubles": "One of these athletes is already participating in another doubles pair for this event.",
+      "duplicateGeneric": "This score already exists."
+    },
     "actions": {
       "saveScore": "Save score",
       "saving": "Saving..."

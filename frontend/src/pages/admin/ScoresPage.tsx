@@ -91,6 +91,26 @@ export const ScoresPage = () => {
   const opts = { token: accessToken };
   const lastToastRef = useRef<{ status: "error" | "success" | "info"; message: string } | null>(null);
 
+  const localizeErrorMessage = (msg: string): string => {
+    // Map known backend validation messages to translated strings.
+    if (msg === "Athlete already has a score for this event and level") {
+      return t("scores.errors.duplicateSingles");
+    }
+    if (msg === "This pair already has a score for this event and level") {
+      return t("scores.errors.duplicatePair");
+    }
+    if (msg === "An athlete in this pair already has a doubles score for this event and level") {
+      return t("scores.errors.athleteAlreadyInDoubles");
+    }
+
+    // DB-level unique constraint fallback (e.g., Postgres duplicate key message).
+    if (/duplicate key value violates unique constraint/i.test(msg)) {
+      return t("scores.errors.duplicateGeneric");
+    }
+
+    return msg;
+  };
+
   useEffect(() => {
     apiClient
       .get<Competition[]>("/competitions", opts)
@@ -177,8 +197,9 @@ export const ScoresPage = () => {
   }, [selectedEvent?.id]);
 
   useEffect(() => {
-    const msg = phasesError ?? error;
-    if (!msg) return;
+    const rawMsg = phasesError ?? error;
+    if (!rawMsg) return;
+    const msg = localizeErrorMessage(rawMsg);
     if (lastToastRef.current?.status === "error" && lastToastRef.current.message === msg) return;
     lastToastRef.current = { status: "error", message: msg };
     toast({
@@ -188,7 +209,7 @@ export const ScoresPage = () => {
       isClosable: true,
       position: "bottom-right",
     });
-  }, [phasesError, error, toast]);
+  }, [phasesError, error, toast, t]);
 
   useEffect(() => {
     if (!selectedEvent?.is_finished) return;

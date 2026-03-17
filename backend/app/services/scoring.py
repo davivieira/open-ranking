@@ -2,7 +2,7 @@ from collections import defaultdict
 from datetime import date
 from typing import List
 
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from ..models import (
@@ -111,6 +111,68 @@ def _validate_gender_for_event(athlete: Athlete, event: Event) -> None:
     raise ValueError("Event is female-only; athlete gender does not match")
 
 
+def _ensure_no_duplicate_score_for_event(
+  db: Session,
+  *,
+  event: Event,
+  level: Level,
+  athlete_id: int,
+  partner_id: int | None,
+) -> None:
+  """
+  Ensure there is no existing score for this athlete (and partner, for doubles)
+  in the given event and level.
+  """
+  # Singles: one score per athlete per event+level.
+  if event.event_type == EventType.SINGLES:
+    existing = db.scalar(
+      select(Score.id).where(
+        Score.event_id == event.id,
+        Score.level == level,
+        Score.athlete_id == athlete_id,
+        Score.partner_id.is_(None),
+      )
+    )
+    if existing is not None:
+      raise ValueError("Athlete already has a score for this event and level")
+
+    return
+
+  # Doubles
+  if partner_id is None:
+    # Should not happen due to earlier validation, but guard defensively.
+    raise ValueError("Doubles event requires a partner")
+
+  # 1) Prevent duplicate pair (regardless of order, since we normalize ids).
+  existing_pair = db.scalar(
+    select(Score.id).where(
+      Score.event_id == event.id,
+      Score.level == level,
+      Score.athlete_id == athlete_id,
+      Score.partner_id == partner_id,
+    )
+  )
+  if existing_pair is not None:
+    raise ValueError("This pair already has a score for this event and level")
+
+  # 2) Prevent either athlete from appearing in any other doubles score
+  # for this event and level.
+  existing_any = db.scalar(
+    select(Score.id).where(
+      Score.event_id == event.id,
+      Score.level == level,
+      or_(
+        Score.athlete_id.in_([athlete_id, partner_id]),
+        Score.partner_id.in_([athlete_id, partner_id]),
+      ),
+    )
+  )
+  if existing_any is not None:
+    raise ValueError(
+      "An athlete in this pair already has a doubles score for this event and level",
+    )
+
+
 def create_score_for_existing_athlete(
   db: Session,
   *,
@@ -169,6 +231,14 @@ def create_score_for_existing_athlete(
   aid, pid = athlete.id, partner_athlete.id if partner_athlete else None
   if pid is not None and aid > pid:
     aid, pid = pid, aid
+
+  _ensure_no_duplicate_score_for_event(
+    db,
+    event=event,
+    level=level,
+    athlete_id=aid,
+    partner_id=pid,
+  )
 
   score = Score(
     athlete_id=aid,
@@ -257,6 +327,14 @@ def create_score_with_new_athlete(
   aid, pid = athlete.id, partner_athlete.id if partner_athlete else None
   if pid is not None and aid > pid:
     aid, pid = pid, aid
+
+  _ensure_no_duplicate_score_for_event(
+    db,
+    event=event,
+    level=level,
+    athlete_id=aid,
+    partner_id=pid,
+  )
 
   if history_entries:
     for entry in history_entries:
