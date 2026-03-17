@@ -1,3 +1,5 @@
+import os
+
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
@@ -15,9 +17,15 @@ from .routes.scores import router as scores_router
 
 app = FastAPI(title="Open Ranking API", version="0.1.0")
 
+def _cors_origins() -> list[str]:
+  raw = os.getenv("CORS_ORIGINS", "").strip()
+  if not raw:
+    return ["http://localhost:3000"]
+  return [o.strip() for o in raw.split(",") if o.strip()]
+
 app.add_middleware(
   CORSMiddleware,
-  allow_origins=["http://localhost:3000"],
+  allow_origins=_cors_origins(),
   allow_credentials=True,
   allow_methods=["*"],
   allow_headers=["*"],
@@ -69,6 +77,14 @@ def on_startup() -> None:
     run_user_role_viewer_migration()
   except Exception:
     pass
+
+  # Seed an initial admin user when credentials are provided (idempotent).
+  if os.getenv("INITIAL_ADMIN_EMAIL") and os.getenv("INITIAL_ADMIN_PASSWORD"):
+    try:
+      from .seed_admin import seed_admin
+      seed_admin()
+    except Exception:
+      pass
 
 
 app.include_router(athletes_router)

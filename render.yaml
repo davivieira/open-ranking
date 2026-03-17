@@ -1,0 +1,41 @@
+databases:
+  - name: open-ranking-db
+    plan: free
+    databaseName: open_ranking
+    user: open_ranking
+
+services:
+  # Backend API (FastAPI)
+  - type: web
+    name: open-ranking-backend
+    env: docker
+    rootDir: backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: open-ranking-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: INITIAL_ADMIN_EMAIL
+        value: admin@open-ranking.com
+      - key: INITIAL_ADMIN_PASSWORD
+        generateValue: true
+      # Set by you after frontend deploy (or edit this to the final frontend URL)
+      - key: CORS_ORIGINS
+        value: http://localhost:3000
+
+  # Frontend (Vite build -> static site)
+  - type: web
+    name: open-ranking-frontend
+    env: static
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      # Set by you after backend deploy (or edit this to the final backend URL)
+      - key: VITE_API_BASE_URL
+        value: http://localhost:8000
+

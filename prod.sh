@@ -20,14 +20,16 @@ compose_cmd() {
   fi
 }
 
-# Load .env.prod if present (overrides compose defaults)
+# Load .env.prod (required for prod - no default secrets)
 load_env() {
-  if [[ -f .env.prod ]]; then
-    set -a
-    # shellcheck source=/dev/null
-    source .env.prod
-    set +a
+  if [[ ! -f .env.prod ]]; then
+    echo "Error: .env.prod not found. Copy .env.prod.example to .env.prod and set real secrets." >&2
+    exit 1
   fi
+  set -a
+  # shellcheck source=/dev/null
+  source .env.prod
+  set +a
 }
 
 cmd_start() {
@@ -57,7 +59,7 @@ else:
 
   echo "Open Ranking PROD stack is running."
   echo "  Frontend: http://localhost:3000  Backend API: http://localhost:8000"
-  echo "  Local prod defaults: DB postgres/postgres, admin admin@open-ranking.com / admin123"
+  echo "  Use .env.prod for credentials (copy from .env.prod.example)."
   echo "  For Oracle Cloud: create .env.prod with real secrets, open firewall ports 3000 and 8000."
 }
 

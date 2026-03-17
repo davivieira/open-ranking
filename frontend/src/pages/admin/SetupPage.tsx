@@ -86,6 +86,7 @@ type CompetitionWithTree = Competition & { phases: PhaseWithEvents[] };
 export const SetupPage = () => {
   const { accessToken, user } = useAuthStore();
   const isViewer = user?.role === "VIEWER";
+  const { t } = useTranslation("admin");
   const toast = useToast();
   const navigate = useNavigate();
   const opts = { token: accessToken };
@@ -274,10 +275,10 @@ export const SetupPage = () => {
   }, [editTarget, editEventType, editGenderCategory, tree]);
 
   useEffect(() => {
-    if (editEventType === "SINGLES" && editGenderCategory === "MIXED") {
-      setEditGenderCategory("MALE");
+    if (editEventType === "SINGLES") {
+      setEditGenderCategory((prev) => (prev === "MIXED" ? "MALE" : prev));
     }
-  }, [editEventType, editGenderCategory]);
+  }, [editEventType]);
 
   const handleCreateCompetition = async (e: FormEvent) => {
     e.preventDefault();
@@ -589,7 +590,13 @@ export const SetupPage = () => {
                 />
               </FormControl>
               <FormControl isRequired>
-                <FormLabel>Slug</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  Slug
+                  <InfoTooltip
+                    label={t("setup.newCompetition.help.slug.ariaLabel")}
+                    content={t("setup.newCompetition.help.slug.text")}
+                  />
+                </FormLabel>
                 <Input
                   value={compSlug}
                   onChange={(e) => setCompSlug(e.target.value)}
@@ -597,19 +604,6 @@ export const SetupPage = () => {
                   color="black"
                   placeholder="e.g. open-2026"
                 />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Type</FormLabel>
-                <Select
-                  value={compType}
-                  onChange={(e) => setCompType(e.target.value)}
-                  bg="white"
-                  color="black"
-                >
-                  <option value="OPEN">Open</option>
-                  <option value="STRONG_GAMES">Strong Games</option>
-                  <option value="OTHER">Other</option>
-                </Select>
               </FormControl>
               <FormControl>
                 <FormLabel>Year</FormLabel>
@@ -737,7 +731,7 @@ export const SetupPage = () => {
                   <option value="">Select phase</option>
                   {phasesForEventForm.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.code} – {p.name}
+                      {p.name}
                     </option>
                   ))}
                 </Select>
@@ -1100,16 +1094,14 @@ export const SetupPage = () => {
                     <Input value={editName} onChange={(e) => setEditName(e.target.value)} bg="white" color="black" />
                   </FormControl>
                   <FormControl isRequired>
-                    <FormLabel>Slug</FormLabel>
+                    <FormLabel display="flex" alignItems="center" gap={2}>
+                      Slug
+                      <InfoTooltip
+                        label={t("setup.newCompetition.help.slug.ariaLabel")}
+                        content={t("setup.newCompetition.help.slug.text")}
+                      />
+                    </FormLabel>
                     <Input value={editSlug} onChange={(e) => setEditSlug(e.target.value)} bg="white" color="black" />
-                  </FormControl>
-                  <FormControl>
-                    <FormLabel>Type</FormLabel>
-                    <Select value={editType} onChange={(e) => setEditType(e.target.value)} bg="white" color="black">
-                      <option value="OPEN">Open</option>
-                      <option value="STRONG_GAMES">Strong Games</option>
-                      <option value="OTHER">Other</option>
-                    </Select>
                   </FormControl>
                   <FormControl>
                     <FormLabel>Year</FormLabel>

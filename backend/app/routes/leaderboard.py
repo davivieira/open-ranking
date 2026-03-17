@@ -1,8 +1,7 @@
 import csv
 import io
-import json
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 from sqlalchemy.orm import Session
 
@@ -48,9 +47,11 @@ def export_leaderboard(
   level: Level = Query(..., description="Level"),
   gender: Gender = Query(..., description="MALE or FEMALE"),
   event_id: int | None = Query(default=None),
-  format: str = Query(default="json", description="csv or json"),
+  format: str = Query(default="csv", description="csv (only format supported)"),
   db: Session = Depends(get_db),
 ) -> Response:
+  if format.lower() != "csv":
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Only CSV format is supported")
   entries = get_leaderboard(
     db,
     competition_id=competition_id,
@@ -60,29 +61,16 @@ def export_leaderboard(
     event_id=event_id,
   )
   slug_safe = f"c{competition_id}-p{phase_id}"
-  if format.lower() == "csv":
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(["Rank", "Athlete(s)", "Total points", "Events"])
-    for e in entries:
-      w.writerow([e.rank, _athlete_display(e), e.total_points, e.event_count])
-    body = buf.getvalue().encode("utf-8")
-    return Response(
-      content=body,
-      media_type="text/csv; charset=utf-8",
-      headers={
-        "Content-Disposition": f'attachment; filename="leaderboard-{slug_safe}.csv"',
-      },
-    )
-  body = json.dumps(
-    [e.model_dump() for e in entries],
-    indent=2,
-    ensure_ascii=False,
-  ).encode("utf-8")
+  buf = io.StringIO()
+  w = csv.writer(buf)
+  w.writerow(["Rank", "Athlete(s)", "Total points", "Events"])
+  for e in entries:
+    w.writerow([e.rank, _athlete_display(e), e.total_points, e.event_count])
+  body = buf.getvalue().encode("utf-8")
   return Response(
     content=body,
-    media_type="application/json; charset=utf-8",
+    media_type="text/csv; charset=utf-8",
     headers={
-      "Content-Disposition": f'attachment; filename="leaderboard-{slug_safe}.json"',
+      "Content-Disposition": f'attachment; filename="leaderboard-{slug_safe}.csv"',
     },
   )

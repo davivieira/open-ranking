@@ -1,12 +1,78 @@
 {
   "scores": {
-    "title": "Resultados"
+    "title": "Resultados",
+    "labels": {
+      "competition": "Competição",
+      "event": "Evento (por fase)",
+      "athlete": "Atleta",
+      "athlete1": "Atleta 1",
+      "athlete2": "Atleta 2 (par)",
+      "result": "Resultado",
+      "time": "Tempo (ex.: 5:32 ou 1:05:30)",
+      "points": "Pontos / repetições"
+    },
+    "placeholders": {
+      "selectCompetition": "Selecione a competição",
+      "loadingStages": "Carregando fases...",
+      "selectStageEvent": "Selecione fase / evento",
+      "noEvents": "Nenhum evento para esta competição",
+      "selectAthlete": "Selecione o atleta",
+      "selectPartner": "Selecione o par",
+      "time": "MM:SS ou HH:MM:SS",
+      "error": "Erro: {{error}}"
+    },
+    "help": {
+      "event": {
+        "ariaLabel": "Mais informações sobre seleção do evento",
+        "text": "Selecione o evento ao qual você quer atribuir um resultado."
+      },
+      "athlete": {
+        "ariaLabel": "Mais informações sobre seleção do atleta",
+        "singles": "Selecione o atleta ao qual você quer atribuir um resultado.",
+        "doubles": "Selecione o par ao qual você quer atribuir um resultado."
+      },
+      "result": {
+        "ariaLabel": "Mais informações sobre o resultado",
+        "text": "Informe o resultado do atleta/par. Use tempo se finalizou o evento, ou pontos se não finalizou."
+      }
+    },
+    "resultOptions": {
+      "finishedTime": "Finalizou (tempo)",
+      "didntFinishPoints": "Não finalizou (pontos)"
+    },
+    "info": {
+      "eventFinished": "Este evento foi finalizado; não é possível adicionar mais resultados."
+    },
+    "actions": {
+      "saveScore": "Salvar resultado"
+    }
   },
   "athletes": {
     "title": "Perfis de atletas"
   },
   "setup": {
-    "title": "Configuração – Competições, Fases, Eventos"
+    "title": "Configuração – Competições, Fases, Eventos",
+    "newCompetition": {
+      "title": "Nova competição",
+      "labels": {
+        "name": "Nome",
+        "slug": "Slug",
+        "year": "Ano",
+        "description": "Descrição"
+      },
+      "placeholders": {
+        "slug": "ex.: open-2026"
+      },
+      "help": {
+        "slug": {
+          "ariaLabel": "Mais informações sobre o slug",
+          "text": "Informe um identificador para sua competição. Ele será usado como parte da URL que você vai compartilhar com seus atletas."
+        }
+      },
+      "actions": {
+        "create": "Criar competição"
+      }
+    }
   }
 }
 

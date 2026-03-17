@@ -28,8 +28,10 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { FormEvent, useRef, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../lib/apiClient";
+import { InfoTooltip } from "../../components/InfoTooltip";
 import { handleApiError } from "../../lib/handleApiError";
 import { useAuthStore } from "../../state/authStore";
 import { useScoresStore } from "../../state/scoresStore";
@@ -52,6 +54,7 @@ type Athlete = { id: number; name: string; gender: string; level: string; double
 export const ScoresPage = () => {
   const { accessToken, user } = useAuthStore();
   const isViewer = user?.role === "VIEWER";
+  const { t } = useTranslation("admin");
   const navigate = useNavigate();
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [phasesWithEvents, setPhasesWithEvents] = useState<{ phase: Phase; events: Event[] }[]>([]);
@@ -305,7 +308,7 @@ export const ScoresPage = () => {
   return (
     <Stack spacing={8}>
       <Heading size="lg" color="brand.yellow.400">
-        Scores
+        {t("scores.title")}
       </Heading>
 
       {(error || phasesError) && (
@@ -321,7 +324,7 @@ export const ScoresPage = () => {
           <Stack spacing={6} as="form" onSubmit={handleSubmit}>
             <Flex gap={4} flexWrap="wrap">
               <FormControl maxW="280px" isRequired>
-                <FormLabel>Competition</FormLabel>
+                <FormLabel>{t("scores.labels.competition")}</FormLabel>
                 <Select
                   value={competitionId === "" ? "" : String(competitionId)}
                   onChange={(e) =>
@@ -329,7 +332,7 @@ export const ScoresPage = () => {
                   }
                   bg="white"
                   color="black"
-                  placeholder="Select competition"
+                  placeholder={t("scores.placeholders.selectCompetition")}
                 >
                   {competitions.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -339,7 +342,13 @@ export const ScoresPage = () => {
                 </Select>
               </FormControl>
               <FormControl maxW="320px" isRequired>
-                <FormLabel>Event (by stage)</FormLabel>
+                <FormLabel display="flex" alignItems="center" gap={2}>
+                  {t("scores.labels.event")}
+                  <InfoTooltip
+                    label={t("scores.help.event.ariaLabel")}
+                    content={t("scores.help.event.text")}
+                  />
+                </FormLabel>
                 <Select
                   value={eventId === "" ? "" : String(eventId)}
                   onChange={(e) =>
@@ -349,18 +358,18 @@ export const ScoresPage = () => {
                   color="black"
                   placeholder={
                     phasesLoading
-                      ? "Loading stages..."
-                      : "Select stage / event"
+                      ? t("scores.placeholders.loadingStages")
+                      : t("scores.placeholders.selectStageEvent")
                   }
                   isDisabled={!competitionId || phasesLoading}
                 >
                   {phasesError ? (
                     <option value="" disabled>
-                      Error: {phasesError}
+                      {t("scores.placeholders.error", { error: phasesError })}
                     </option>
                   ) : eventOptions.length === 0 ? (
                     <option value="" disabled>
-                      {phasesLoading ? "Loading..." : "No events for this competition"}
+                      {phasesLoading ? t("common:loading") : t("scores.placeholders.noEvents")}
                     </option>
                   ) : (
                     eventOptions.map(({ phase, ev }) => (
@@ -400,13 +409,19 @@ export const ScoresPage = () => {
             {mode === "existing" && (
               <Flex gap={4} flexWrap="wrap" align="flex-start">
                 <FormControl isRequired maxW="320px">
-                  <FormLabel>{isDoubles ? "Athlete 1" : "Athlete"}</FormLabel>
+                  <FormLabel display="flex" alignItems="center" gap={2}>
+                    {isDoubles ? t("scores.labels.athlete1") : t("scores.labels.athlete")}
+                    <InfoTooltip
+                      label={t("scores.help.athlete.ariaLabel")}
+                      content={isDoubles ? t("scores.help.athlete.doubles") : t("scores.help.athlete.singles")}
+                    />
+                  </FormLabel>
                   <Select
                     value={athleteId}
                     onChange={(e) => setAthleteId(e.target.value)}
                     bg="white"
                     color="black"
-                    placeholder="Select athlete"
+                    placeholder={t("scores.placeholders.selectAthlete")}
                   >
                     {athletes.map((a) => (
                       <option key={a.id} value={String(a.id)}>
@@ -417,13 +432,19 @@ export const ScoresPage = () => {
                 </FormControl>
                 {isDoubles && (
                   <FormControl isRequired maxW="320px">
-                    <FormLabel>Athlete 2 (partner)</FormLabel>
+                    <FormLabel display="flex" alignItems="center" gap={2}>
+                      {t("scores.labels.athlete2")}
+                      <InfoTooltip
+                        label={t("scores.help.athlete.ariaLabel")}
+                        content={t("scores.help.athlete.doubles")}
+                      />
+                    </FormLabel>
                     <Select
                       value={partnerId}
                       onChange={(e) => setPartnerId(e.target.value)}
                       bg="white"
                       color="black"
-                      placeholder="Select partner"
+                      placeholder={t("scores.placeholders.selectPartner")}
                     >
                       {athletes
                         .filter((a) => String(a.id) !== athleteId)
@@ -541,27 +562,33 @@ export const ScoresPage = () => {
             )}
 
             <FormControl isRequired>
-              <FormLabel>Result</FormLabel>
+              <FormLabel display="flex" alignItems="center" gap={2}>
+                {t("scores.labels.result")}
+                <InfoTooltip
+                  label={t("scores.help.result.ariaLabel")}
+                  content={t("scores.help.result.text")}
+                />
+              </FormLabel>
               <RadioGroup value={scoreType} onChange={(v) => setScoreType(v as "time" | "points")}>
                 <Stack direction="row" spacing={4} mb={3}>
-                  <Radio value="time">Finished (time)</Radio>
-                  <Radio value="points">Didn&apos;t finish (points)</Radio>
+                  <Radio value="time">{t("scores.resultOptions.finishedTime")}</Radio>
+                  <Radio value="points">{t("scores.resultOptions.didntFinishPoints")}</Radio>
                 </Stack>
               </RadioGroup>
               {scoreType === "time" ? (
                 <FormControl isRequired>
-                  <FormLabel>Time (e.g. 5:32 or 1:05:30)</FormLabel>
+                  <FormLabel>{t("scores.labels.time")}</FormLabel>
                   <Input
                     value={timeInput}
                     onChange={(e) => setTimeInput(e.target.value)}
-                    placeholder="MM:SS or HH:MM:SS"
+                    placeholder={t("scores.placeholders.time")}
                     bg="white"
                     color="black"
                   />
                 </FormControl>
               ) : (
                 <FormControl isRequired>
-                  <FormLabel>Points / reps</FormLabel>
+                  <FormLabel>{t("scores.labels.points")}</FormLabel>
                   <Input
                     type="number"
                     min={0}
@@ -577,7 +604,7 @@ export const ScoresPage = () => {
             {selectedEvent?.is_finished && (
               <Alert status="info" borderRadius="md">
                 <AlertIcon />
-                This event is finished; no more scores can be added.
+                {t("scores.info.eventFinished")}
               </Alert>
             )}
             <Button
@@ -597,7 +624,7 @@ export const ScoresPage = () => {
                 ((mode === "existing-athlete-new-partner" || (mode === "new" && isDoubles)) && (!partnerName || (mode === "existing-athlete-new-partner" && !athleteId)))
               }
             >
-              Save score
+              {t("scores.actions.saveScore")}
             </Button>
           </Stack>
         </CardBody>

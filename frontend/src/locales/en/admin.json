@@ -1,12 +1,78 @@
 {
   "scores": {
-    "title": "Scores"
+    "title": "Scores",
+    "labels": {
+      "competition": "Competition",
+      "event": "Event (by stage)",
+      "athlete": "Athlete",
+      "athlete1": "Athlete 1",
+      "athlete2": "Athlete 2 (partner)",
+      "result": "Result",
+      "time": "Time (e.g. 5:32 or 1:05:30)",
+      "points": "Points / reps"
+    },
+    "placeholders": {
+      "selectCompetition": "Select competition",
+      "loadingStages": "Loading stages...",
+      "selectStageEvent": "Select stage / event",
+      "noEvents": "No events for this competition",
+      "selectAthlete": "Select athlete",
+      "selectPartner": "Select partner",
+      "time": "MM:SS or HH:MM:SS",
+      "error": "Error: {{error}}"
+    },
+    "help": {
+      "event": {
+        "ariaLabel": "More info about event selection",
+        "text": "Select the event you want to assign a score to."
+      },
+      "athlete": {
+        "ariaLabel": "More info about athlete selection",
+        "singles": "Select the athlete you want to assign a score to.",
+        "doubles": "Select the pair you want to assign a score to."
+      },
+      "result": {
+        "ariaLabel": "More info about results",
+        "text": "Enter the result for the athlete/pair. Use time if finished, or points if they didn’t finish."
+      }
+    },
+    "resultOptions": {
+      "finishedTime": "Finished (time)",
+      "didntFinishPoints": "Didn’t finish (points)"
+    },
+    "info": {
+      "eventFinished": "This event is finished; no more scores can be added."
+    },
+    "actions": {
+      "saveScore": "Save score"
+    }
   },
   "athletes": {
     "title": "Athlete Profiles"
   },
   "setup": {
-    "title": "Setup – Competitions, Phases, Events"
+    "title": "Setup – Competitions, Phases, Events",
+    "newCompetition": {
+      "title": "New competition",
+      "labels": {
+        "name": "Name",
+        "slug": "Slug",
+        "year": "Year",
+        "description": "Description"
+      },
+      "placeholders": {
+        "slug": "e.g. open-2026"
+      },
+      "help": {
+        "slug": {
+          "ariaLabel": "More info about slug",
+          "text": "Enter an identifier for your competition. This will be used as part of the URL you share with your athletes."
+        }
+      },
+      "actions": {
+        "create": "Create competition"
+      }
+    }
   }
 }
 
