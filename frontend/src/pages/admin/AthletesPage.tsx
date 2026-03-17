@@ -1,11 +1,9 @@
 import {
-  Alert,
   AlertDialog,
   AlertDialogBody,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertIcon,
   Box,
   Button,
   Card,
@@ -31,8 +29,10 @@ import {
   Thead,
   Tr,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../lib/apiClient";
 import { handleApiError } from "../../lib/handleApiError";
@@ -49,21 +49,24 @@ type AthleteProfile = {
   events_participated: number;
 };
 
-const LEVEL_OPTIONS = [
-  { value: "", label: "All levels" },
-  { value: "RX", label: "Rx" },
-  { value: "SCALED", label: "Scaled" },
-  { value: "BEGINNER", label: "Beginner" },
-  { value: "DOUBLE_RX", label: "Double Rx" },
-  { value: "DOUBLE_SCALED", label: "Double Scaled" },
-  { value: "DOUBLE_BEGINNER", label: "Double Beginner" },
-];
-
 export const AthletesPage = () => {
   const { accessToken, user } = useAuthStore();
   const isViewer = user?.role === "VIEWER";
   const opts = { token: accessToken };
   const navigate = useNavigate();
+  const { t } = useTranslation("admin");
+  const toast = useToast();
+  const lastToastRef = useRef<{ status: "success" | "error"; message: string } | null>(null);
+
+  const LEVEL_OPTIONS = [
+    { value: "", label: t("athletes.filters.levelOptions.allLevels") },
+    { value: "RX", label: t("common.level.rx") },
+    { value: "SCALED", label: t("common.level.scaled") },
+    { value: "BEGINNER", label: t("common.level.beginner") },
+    { value: "DOUBLE_RX", label: t("common.doublesLevel.doubleRx") },
+    { value: "DOUBLE_SCALED", label: t("common.doublesLevel.doubleScaled") },
+    { value: "DOUBLE_BEGINNER", label: t("common.doublesLevel.doubleBeginner") },
+  ];
 
   const [athletes, setAthletes] = useState<AthleteProfile[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -109,6 +112,45 @@ export const AthletesPage = () => {
   useEffect(() => {
     loadAthletes();
   }, [loadAthletes]);
+
+  useEffect(() => {
+    if (!error) return;
+    if (lastToastRef.current?.status === "error" && lastToastRef.current.message === error) return;
+    lastToastRef.current = { status: "error", message: error };
+    toast({
+      title: error,
+      status: "error",
+      duration: 4000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [error, toast]);
+
+  useEffect(() => {
+    if (!success) return;
+    if (lastToastRef.current?.status === "success" && lastToastRef.current.message === success) return;
+    lastToastRef.current = { status: "success", message: success };
+    toast({
+      title: success,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [success, toast]);
+
+  useEffect(() => {
+    if (!editError) return;
+    if (lastToastRef.current?.status === "error" && lastToastRef.current.message === editError) return;
+    lastToastRef.current = { status: "error", message: editError };
+    toast({
+      title: editError,
+      status: "error",
+      duration: 4000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [editError, toast]);
 
   const handleCreate = async (e: FormEvent) => {
     e.preventDefault();
@@ -207,25 +249,18 @@ export const AthletesPage = () => {
   return (
     <Stack spacing={8}>
       <Heading size="lg" color="brand.yellow.400">
-        Athlete Profiles
+        {t("athletes.title")}
       </Heading>
-
-      {(error || success) && (
-        <Alert status={error ? "error" : "success"} borderRadius="md">
-          <AlertIcon />
-          {error ?? success}
-        </Alert>
-      )}
 
       {!isViewer && (
       <Card bg="brand.card">
         <CardBody>
           <Heading size="md" mb={4}>
-            New athlete
+            {t("athletes.newAthlete.title")}
           </Heading>
           <Stack as="form" onSubmit={handleCreate} spacing={4} maxW="md">
             <FormControl isRequired>
-              <FormLabel>Name</FormLabel>
+              <FormLabel>{t("athletes.labels.name")}</FormLabel>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -234,37 +269,37 @@ export const AthletesPage = () => {
               />
             </FormControl>
             <FormControl>
-              <FormLabel>Gender</FormLabel>
+              <FormLabel>{t("athletes.labels.gender")}</FormLabel>
               <Select
                 value={gender}
                 onChange={(e) => setGender(e.target.value as "MALE" | "FEMALE")}
                 bg="white"
                 color="black"
               >
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
+                <option value="MALE">{t("common.gender.male")}</option>
+                <option value="FEMALE">{t("common.gender.female")}</option>
               </Select>
             </FormControl>
             <HStack spacing={4}>
               <FormControl>
-                <FormLabel>Level (singles)</FormLabel>
+                <FormLabel>{t("athletes.labels.levelSingles")}</FormLabel>
                 <Select value={level} onChange={(e) => setLevel(e.target.value)} bg="white" color="black">
-                  <option value="RX">Rx</option>
-                  <option value="SCALED">Scaled</option>
-                  <option value="BEGINNER">Beginner</option>
+                  <option value="RX">{t("common.level.rx")}</option>
+                  <option value="SCALED">{t("common.level.scaled")}</option>
+                  <option value="BEGINNER">{t("common.level.beginner")}</option>
                 </Select>
               </FormControl>
               <FormControl>
-                <FormLabel>Doubles level</FormLabel>
+                <FormLabel>{t("athletes.labels.doublesLevel")}</FormLabel>
                 <Select value={doublesLevel} onChange={(e) => setDoublesLevel(e.target.value)} bg="white" color="black">
-                  <option value="DOUBLE_RX">Double Rx</option>
-                  <option value="DOUBLE_SCALED">Double Scaled</option>
-                  <option value="DOUBLE_BEGINNER">Double Beginner</option>
+                  <option value="DOUBLE_RX">{t("common.doublesLevel.doubleRx")}</option>
+                  <option value="DOUBLE_SCALED">{t("common.doublesLevel.doubleScaled")}</option>
+                  <option value="DOUBLE_BEGINNER">{t("common.doublesLevel.doubleBeginner")}</option>
                 </Select>
               </FormControl>
             </HStack>
             <FormControl>
-              <FormLabel>Birth date</FormLabel>
+              <FormLabel>{t("athletes.labels.birthDate")}</FormLabel>
               <Input
                 type="date"
                 value={birthDate}
@@ -274,7 +309,7 @@ export const AthletesPage = () => {
               />
             </FormControl>
             <Button type="submit" colorScheme="orange" isLoading={createSubmitting}>
-              Create athlete
+              {t("athletes.actions.create")}
             </Button>
           </Stack>
         </CardBody>
@@ -284,24 +319,24 @@ export const AthletesPage = () => {
       <Card bg="brand.card">
         <CardBody>
           <Heading size="md" mb={4}>
-            Athletes
+            {t("athletes.list.title")}
           </Heading>
           <Flex gap={4} mb={4} flexWrap="wrap">
             <FormControl maxW="180px">
-              <FormLabel>Filter by gender</FormLabel>
+              <FormLabel>{t("athletes.filters.gender")}</FormLabel>
               <Select
                 value={filterGender}
                 onChange={(e) => setFilterGender(e.target.value)}
                 bg="white"
                 color="black"
               >
-                <option value="">All</option>
-                <option value="MALE">Male</option>
-                <option value="FEMALE">Female</option>
+                <option value="">{t("athletes.filters.all")}</option>
+                <option value="MALE">{t("common.gender.male")}</option>
+                <option value="FEMALE">{t("common.gender.female")}</option>
               </Select>
             </FormControl>
             <FormControl maxW="200px">
-              <FormLabel>Filter by level</FormLabel>
+              <FormLabel>{t("athletes.filters.level")}</FormLabel>
               <Select
                 value={filterLevel}
                 onChange={(e) => setFilterLevel(e.target.value)}
@@ -319,23 +354,23 @@ export const AthletesPage = () => {
           <Table variant="simple" size="md">
             <Thead>
               <Tr>
-                <Th>Name</Th>
-                <Th>Age</Th>
-                <Th>Events participated</Th>
-                <Th>Actions</Th>
+                <Th>{t("athletes.table.columns.name")}</Th>
+                <Th>{t("athletes.table.columns.age")}</Th>
+                <Th>{t("athletes.table.columns.eventsParticipated")}</Th>
+                <Th>{t("athletes.table.columns.actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
               {athletes.map((a) => (
                 <Tr key={a.id}>
                   <Td>{a.name}</Td>
-                  <Td>{a.age ?? "—"}</Td>
+                  <Td>{a.age ?? t("common.emptyDash")}</Td>
                   <Td>{a.events_participated}</Td>
                   <Td>
                     {!isViewer && (
                       <HStack spacing={2}>
                         <Button size="sm" colorScheme="blue" variant="outline" onClick={() => openEdit(a)}>
-                          Edit
+                          {t("common.actions.edit")}
                         </Button>
                         <Button
                           size="sm"
@@ -343,9 +378,9 @@ export const AthletesPage = () => {
                           variant="outline"
                           onClick={() => openDelete(a)}
                           isDisabled={a.events_participated > 0}
-                          title={a.events_participated > 0 ? "Remove all scores first" : ""}
+                          title={a.events_participated > 0 ? t("athletes.actions.removeScoresFirst") : ""}
                         >
-                          Delete
+                          {t("common.actions.delete")}
                         </Button>
                       </HStack>
                     )}
@@ -356,7 +391,7 @@ export const AthletesPage = () => {
           </Table>
           {!athletes.length && (
             <Box mt={2} color="gray.400">
-              No athletes yet.
+              {t("athletes.table.empty")}
             </Box>
           )}
         </CardBody>
@@ -365,18 +400,12 @@ export const AthletesPage = () => {
       <Modal isOpen={editDisclosure.isOpen} onClose={editDisclosure.onClose}>
         <ModalOverlay />
         <ModalContent bg="brand.card" color="white">
-          <ModalHeader>Edit athlete</ModalHeader>
+          <ModalHeader>{t("athletes.edit.title")}</ModalHeader>
           <form onSubmit={handleEdit}>
             <ModalBody>
-              {editError && (
-                <Alert status="error" mb={4} borderRadius="md">
-                  <AlertIcon />
-                  {editError}
-                </Alert>
-              )}
               <Stack spacing={4}>
                 <FormControl isRequired>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t("athletes.labels.name")}</FormLabel>
                   <Input
                     value={editName}
                     onChange={(e) => setEditName(e.target.value)}
@@ -385,37 +414,37 @@ export const AthletesPage = () => {
                   />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel>{t("athletes.labels.gender")}</FormLabel>
                   <Select
                     value={editGender}
                     onChange={(e) => setEditGender(e.target.value as "MALE" | "FEMALE")}
                     bg="white"
                     color="black"
                   >
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
+                    <option value="MALE">{t("common.gender.male")}</option>
+                    <option value="FEMALE">{t("common.gender.female")}</option>
                   </Select>
                 </FormControl>
                 <HStack spacing={4}>
                   <FormControl>
-                    <FormLabel>Level (singles)</FormLabel>
+                    <FormLabel>{t("athletes.labels.levelSingles")}</FormLabel>
                     <Select value={editLevel} onChange={(e) => setEditLevel(e.target.value)} bg="white" color="black">
-                      <option value="RX">Rx</option>
-                      <option value="SCALED">Scaled</option>
-                      <option value="BEGINNER">Beginner</option>
+                      <option value="RX">{t("common.level.rx")}</option>
+                      <option value="SCALED">{t("common.level.scaled")}</option>
+                      <option value="BEGINNER">{t("common.level.beginner")}</option>
                     </Select>
                   </FormControl>
                   <FormControl>
-                    <FormLabel>Doubles level</FormLabel>
+                    <FormLabel>{t("athletes.labels.doublesLevel")}</FormLabel>
                     <Select value={editDoublesLevel} onChange={(e) => setEditDoublesLevel(e.target.value)} bg="white" color="black">
-                      <option value="DOUBLE_RX">Double Rx</option>
-                      <option value="DOUBLE_SCALED">Double Scaled</option>
-                      <option value="DOUBLE_BEGINNER">Double Beginner</option>
+                      <option value="DOUBLE_RX">{t("common.doublesLevel.doubleRx")}</option>
+                      <option value="DOUBLE_SCALED">{t("common.doublesLevel.doubleScaled")}</option>
+                      <option value="DOUBLE_BEGINNER">{t("common.doublesLevel.doubleBeginner")}</option>
                     </Select>
                   </FormControl>
                 </HStack>
                 <FormControl>
-                  <FormLabel>Birth date</FormLabel>
+                  <FormLabel>{t("athletes.labels.birthDate")}</FormLabel>
                   <Input
                     type="date"
                     value={editBirthDate}
@@ -427,11 +456,11 @@ export const AthletesPage = () => {
               </Stack>
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={editDisclosure.onClose}>
-                Cancel
+              <Button variant="ghost" mr={3} onClick={editDisclosure.onClose} isDisabled={editSubmitting}>
+                {t("common.actions.cancel")}
               </Button>
-              <Button type="submit" colorScheme="orange" isLoading={editSubmitting}>
-                Save
+              <Button type="submit" colorScheme="orange" isLoading={editSubmitting} isDisabled={editSubmitting}>
+                {t("common.actions.save")}
               </Button>
             </ModalFooter>
           </form>
@@ -445,15 +474,15 @@ export const AthletesPage = () => {
       >
         <AlertDialogContent bg="brand.card" color="white">
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Delete athlete
+            {t("athletes.delete.title")}
           </AlertDialogHeader>
           <AlertDialogBody>
             {deleteTarget && (
               <>
-                Are you sure you want to delete <strong>{deleteTarget.name}</strong>?
+                {t("athletes.delete.confirmPrefix")} <strong>{deleteTarget.name}</strong>?
                 {deleteTarget.events_participated > 0 && (
                   <Box mt={2} color="red.300">
-                    This athlete has {deleteTarget.events_participated} event(s). Remove all scores first.
+                    {t("athletes.delete.blockedHasEvents", { count: deleteTarget.events_participated })}
                   </Box>
                 )}
               </>
@@ -461,7 +490,7 @@ export const AthletesPage = () => {
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelDeleteRef} onClick={deleteDisclosure.onClose}>
-              Cancel
+              {t("common.actions.cancel")}
             </Button>
             <Button
               colorScheme="red"
@@ -470,7 +499,7 @@ export const AthletesPage = () => {
               isDisabled={deleteTarget ? deleteTarget.events_participated > 0 : false}
               ml={3}
             >
-              Delete
+              {t("common.actions.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

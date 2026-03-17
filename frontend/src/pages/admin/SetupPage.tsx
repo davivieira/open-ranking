@@ -1,12 +1,10 @@
 import {
-  Alert,
   AlertDialog,
   AlertDialogBody,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogOverlay,
-  AlertIcon,
   Box,
   Button,
   Card,
@@ -22,8 +20,6 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
-  NumberInput,
-  NumberInputField,
   Select,
   SimpleGrid,
   Stack,
@@ -149,14 +145,14 @@ export const SetupPage = () => {
   const [editYear, setEditYear] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editIsActive, setEditIsActive] = useState(true);
-  const [editOrder, setEditOrder] = useState(0);
   const [editEventModes, setEditEventModes] = useState<PhaseEventModes>("BOTH");
   const [editEventType, setEditEventType] = useState<EventType>("SINGLES");
   const [editGenderCategory, setEditGenderCategory] = useState<GenderCategory>("MIXED");
   const [editSubmitting, setEditSubmitting] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
-  const importInputRef = useRef<HTMLInputElement>(null);
-  const [importing, setImporting] = useState(false);
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [finishSubmitting, setFinishSubmitting] = useState(false);
+  const lastToastRef = useRef<{ status: "success" | "error" | "info"; message: string } | null>(null);
 
   const loadCompetitions = async () => {
     try {
@@ -222,6 +218,45 @@ export const SetupPage = () => {
   useEffect(() => {
     loadFullTree();
   }, [loadFullTree]);
+
+  useEffect(() => {
+    if (!error) return;
+    if (lastToastRef.current?.status === "error" && lastToastRef.current.message === error) return;
+    lastToastRef.current = { status: "error", message: error };
+    toast({
+      title: error,
+      status: "error",
+      duration: 4000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [error, toast]);
+
+  useEffect(() => {
+    if (!success) return;
+    if (lastToastRef.current?.status === "success" && lastToastRef.current.message === success) return;
+    lastToastRef.current = { status: "success", message: success };
+    toast({
+      title: success,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [success, toast]);
+
+  useEffect(() => {
+    if (!editError) return;
+    if (lastToastRef.current?.status === "error" && lastToastRef.current.message === editError) return;
+    lastToastRef.current = { status: "error", message: editError };
+    toast({
+      title: editError,
+      status: "error",
+      duration: 4000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [editError, toast]);
 
   useEffect(() => {
     if (typeof phaseCompetitionId === "number") {
@@ -369,6 +404,7 @@ export const SetupPage = () => {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setError(null);
+    setDeleteSubmitting(true);
     try {
       if (deleteTarget.type === "competition") {
         await apiClient.delete(`/competitions/${deleteTarget.id}`, opts);
@@ -389,12 +425,15 @@ export const SetupPage = () => {
       await loadFullTree();
     } catch (err) {
       handleApiError(err, navigate, setError, "Failed to delete");
+    } finally {
+      setDeleteSubmitting(false);
     }
   };
 
   const confirmFinishEvent = async () => {
     if (!finishEventTarget) return;
     setError(null);
+    setFinishSubmitting(true);
     try {
       await apiClient.post(
         `/phases/${finishEventTarget.phaseId}/events/${finishEventTarget.eventId}/finish`,
@@ -407,6 +446,8 @@ export const SetupPage = () => {
       await loadFullTree();
     } catch (err) {
       handleApiError(err, navigate, setError, "Failed to finish event");
+    } finally {
+      setFinishSubmitting(false);
     }
   };
 
@@ -429,12 +470,10 @@ export const SetupPage = () => {
       setEditIsActive(args.competition.is_active);
     } else if (args.type === "phase" && args.phase) {
       setEditName(args.phase.name);
-      setEditOrder(args.phase.order_index);
       setEditEventModes(args.phase.event_modes);
     } else if (args.type === "event" && args.event) {
       setEditName(args.event.name);
       setEditDescription(args.event.description ?? "");
-      setEditOrder(args.event.order_index);
       setEditEventType(args.event.event_type);
       setEditGenderCategory(args.event.gender_category);
     }
@@ -463,7 +502,7 @@ export const SetupPage = () => {
       } else if (editTarget.type === "phase" && editTarget.phase && editTarget.competitionId) {
         await apiClient.patch(
           `/competitions/${editTarget.competitionId}/phases/${editTarget.phase.id}`,
-          { name: editName, order_index: editOrder, event_modes: editEventModes },
+          { name: editName, event_modes: editEventModes },
           opts,
         );
       } else if (editTarget.type === "event" && editTarget.event && editTarget.phaseId) {
@@ -472,7 +511,6 @@ export const SetupPage = () => {
           {
             name: editName,
             description: editDescription || null,
-            order_index: editOrder,
             event_type: editEventType,
             gender_category: editEventType === "SINGLES" && editGenderCategory === "MIXED" ? "MALE" : editGenderCategory,
           },
@@ -505,85 +543,22 @@ export const SetupPage = () => {
   const showEventTypeForEdit =
     editTarget?.type === "event" && editPhaseForEvent?.event_modes === "BOTH";
 
-  const handleImportJson = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImporting(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const text = await file.text();
-      const payload = JSON.parse(text);
-      if (!payload.competitions || !Array.isArray(payload.competitions)) {
-        setError("Invalid format: expected { competitions: [...] }");
-        return;
-      }
-      const result = await apiClient.post<{
-        created_competitions: number;
-        created_phases: number;
-        created_events: number;
-      }>("/admin/import", payload, opts);
-      setSuccess(
-        `Imported ${result.created_competitions} competition(s), ${result.created_phases} phase(s), ${result.created_events} event(s).`,
-      );
-      await loadFullTree();
-    } catch (err) {
-      handleApiError(err, navigate, setError, "Import failed");
-    } finally {
-      setImporting(false);
-      e.target.value = "";
-    }
-  };
-
   return (
     <Stack spacing={8}>
       <Heading size="lg" color="brand.yellow.400">
-        Setup – Competitions, Phases, Events
+        {t("setup.title")}
       </Heading>
-
-      {error && (
-        <Alert status="error" borderRadius="md">
-          <AlertIcon />
-          {error}
-        </Alert>
-      )}
-      {success && (
-        <Alert status="success" borderRadius="md">
-          <AlertIcon />
-          {success}
-        </Alert>
-      )}
-
-      {!isViewer && (
-        <HStack gap={4}>
-          <input
-            ref={importInputRef}
-            type="file"
-            accept=".json,application/json"
-            style={{ display: "none" }}
-            onChange={handleImportJson}
-          />
-          <Button
-            size="sm"
-            variant="outline"
-            isLoading={importing}
-            onClick={() => importInputRef.current?.click()}
-          >
-            Import JSON
-          </Button>
-        </HStack>
-      )}
 
       {!isViewer && (
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
         <Card bg="brand.card">
           <CardBody>
             <Heading size="md" mb={4}>
-              New competition
+              {t("setup.newCompetition.title")}
             </Heading>
             <Stack as="form" onSubmit={handleCreateCompetition} spacing={4}>
               <FormControl isRequired>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>{t("setup.newCompetition.labels.name")}</FormLabel>
                 <Input
                   value={compName}
                   onChange={(e) => setCompName(e.target.value)}
@@ -593,7 +568,7 @@ export const SetupPage = () => {
               </FormControl>
               <FormControl isRequired>
                 <FormLabel display="flex" alignItems="center" gap={2}>
-                  Slug
+                  {t("setup.newCompetition.labels.slug")}
                   <InfoTooltip
                     label={t("setup.newCompetition.help.slug.ariaLabel")}
                     content={t("setup.newCompetition.help.slug.text")}
@@ -604,11 +579,11 @@ export const SetupPage = () => {
                   onChange={(e) => setCompSlug(e.target.value)}
                   bg="white"
                   color="black"
-                  placeholder="e.g. open-2026"
+                  placeholder={t("setup.newCompetition.placeholders.slug")}
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Year</FormLabel>
+                <FormLabel>{t("setup.newCompetition.labels.year")}</FormLabel>
                 <Input
                   type="number"
                   value={compYear}
@@ -618,7 +593,7 @@ export const SetupPage = () => {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>{t("setup.newCompetition.labels.description")}</FormLabel>
                 <Input
                   value={compDescription}
                   onChange={(e) => setCompDescription(e.target.value)}
@@ -627,7 +602,7 @@ export const SetupPage = () => {
                 />
               </FormControl>
               <Button type="submit" colorScheme="orange">
-                Create competition
+                {t("setup.newCompetition.actions.create")}
               </Button>
             </Stack>
           </CardBody>
@@ -636,11 +611,11 @@ export const SetupPage = () => {
         <Card bg="brand.card">
           <CardBody>
             <Heading size="md" mb={4}>
-              New phase
+              {t("setup.newPhase.title")}
             </Heading>
             <Stack as="form" onSubmit={handleCreatePhase} spacing={4}>
               <FormControl isRequired>
-                <FormLabel>Competition</FormLabel>
+                <FormLabel>{t("setup.newPhase.labels.competition")}</FormLabel>
                 <Select
                   value={phaseCompetitionId}
                   onChange={(e) =>
@@ -651,7 +626,7 @@ export const SetupPage = () => {
                   bg="white"
                   color="black"
                 >
-                  <option value="">Select competition</option>
+                  <option value="">{t("setup.common.selectCompetition")}</option>
                   {competitions.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.slug})
@@ -660,7 +635,7 @@ export const SetupPage = () => {
                 </Select>
               </FormControl>
               <FormControl isRequired>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>{t("setup.common.name")}</FormLabel>
                 <Input
                   value={phaseName}
                   onChange={(e) => setPhaseName(e.target.value)}
@@ -669,16 +644,16 @@ export const SetupPage = () => {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Event modes</FormLabel>
+                <FormLabel>{t("setup.newPhase.labels.eventModes")}</FormLabel>
                 <Select
                   value={phaseEventModes}
                   onChange={(e) => setPhaseEventModes(e.target.value as PhaseEventModes)}
                   bg="white"
                   color="black"
                 >
-                  <option value="BOTH">Both singles & doubles</option>
-                  <option value="SINGLES_ONLY">Singles only</option>
-                  <option value="DOUBLES_ONLY">Doubles only</option>
+                  <option value="BOTH">{t("setup.newPhase.eventModes.both")}</option>
+                  <option value="SINGLES_ONLY">{t("setup.newPhase.eventModes.singlesOnly")}</option>
+                  <option value="DOUBLES_ONLY">{t("setup.newPhase.eventModes.doublesOnly")}</option>
                 </Select>
               </FormControl>
               <Button
@@ -686,7 +661,7 @@ export const SetupPage = () => {
                 colorScheme="orange"
                 isDisabled={phaseCompetitionId === ""}
               >
-                Create phase
+                {t("setup.newPhase.actions.create")}
               </Button>
             </Stack>
           </CardBody>
@@ -695,11 +670,11 @@ export const SetupPage = () => {
         <Card bg="brand.card">
           <CardBody>
             <Heading size="md" mb={4}>
-              New event
+              {t("setup.newEvent.title")}
             </Heading>
             <Stack as="form" onSubmit={handleCreateEvent} spacing={4}>
               <FormControl isRequired>
-                <FormLabel>Competition</FormLabel>
+                <FormLabel>{t("setup.newEvent.labels.competition")}</FormLabel>
                 <Select
                   value={eventCompetitionId}
                   onChange={(e) => {
@@ -710,7 +685,7 @@ export const SetupPage = () => {
                   bg="white"
                   color="black"
                 >
-                  <option value="">Select competition</option>
+                  <option value="">{t("setup.common.selectCompetition")}</option>
                   {competitions.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -719,7 +694,7 @@ export const SetupPage = () => {
                 </Select>
               </FormControl>
               <FormControl isRequired>
-                <FormLabel>Phase</FormLabel>
+                <FormLabel>{t("setup.newEvent.labels.phase")}</FormLabel>
                 <Select
                   value={eventPhaseId}
                   onChange={(e) =>
@@ -730,16 +705,16 @@ export const SetupPage = () => {
                   bg="white"
                   color="black"
                 >
-                  <option value="">Select phase</option>
+                  <option value="">{t("setup.common.selectPhase")}</option>
                   {phasesForEventForm.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.code} – {p.name}
+                      {p.name}
                     </option>
                   ))}
                 </Select>
               </FormControl>
               <FormControl isRequired>
-                <FormLabel>Name</FormLabel>
+                <FormLabel>{t("setup.common.name")}</FormLabel>
                 <Input
                   value={eventName}
                   onChange={(e) => setEventName(e.target.value)}
@@ -748,7 +723,7 @@ export const SetupPage = () => {
                 />
               </FormControl>
               <FormControl>
-                <FormLabel>Description</FormLabel>
+                <FormLabel>{t("setup.common.description")}</FormLabel>
                 <Textarea
                   value={eventDescription}
                   onChange={(e) => setEventDescription(e.target.value)}
@@ -760,7 +735,7 @@ export const SetupPage = () => {
               <FormControl>
                 {showEventTypeForCreate && (
                   <>
-                    <FormLabel>Event type</FormLabel>
+                    <FormLabel>{t("setup.newEvent.labels.eventType")}</FormLabel>
                     <Select
                       value={eventType}
                       onChange={(e) => {
@@ -773,23 +748,23 @@ export const SetupPage = () => {
                       bg="white"
                       color="black"
                     >
-                      <option value="SINGLES">Singles</option>
-                      <option value="DOUBLES">Doubles</option>
+                      <option value="SINGLES">{t("setup.newEvent.eventTypes.singles")}</option>
+                      <option value="DOUBLES">{t("setup.newEvent.eventTypes.doubles")}</option>
                     </Select>
                   </>
                 )}
               </FormControl>
               <FormControl>
-                <FormLabel>Gender category</FormLabel>
+                <FormLabel>{t("setup.newEvent.labels.genderCategory")}</FormLabel>
                 <Select
                   value={eventType === "SINGLES" && eventGenderCategory === "MIXED" ? "MALE" : eventGenderCategory}
                   onChange={(e) => setEventGenderCategory(e.target.value as GenderCategory)}
                   bg="white"
                   color="black"
                 >
-                  {eventType === "DOUBLES" && <option value="MIXED">Mixed</option>}
-                  <option value="MALE">Male</option>
-                  <option value="FEMALE">Female</option>
+                  {eventType === "DOUBLES" && <option value="MIXED">{t("setup.newEvent.genderCategories.mixed")}</option>}
+                  <option value="MALE">{t("common.gender.male")}</option>
+                  <option value="FEMALE">{t("common.gender.female")}</option>
                 </Select>
               </FormControl>
               <Button
@@ -797,7 +772,7 @@ export const SetupPage = () => {
                 colorScheme="orange"
                 isDisabled={eventPhaseId === ""}
               >
-                Create event
+                {t("setup.newEvent.actions.create")}
               </Button>
             </Stack>
           </CardBody>
@@ -807,26 +782,26 @@ export const SetupPage = () => {
 
       <Box maxH="70vh" overflowY="auto">
         <Heading size="md" mb={4}>
-          Competitions, stages & events
+          {t("setup.tree.title")}
         </Heading>
         {tree.length === 0 ? (
-          <Box color="gray.400">No competitions yet. Create one above.</Box>
+          <Box color="gray.400">{t("setup.tree.empty")}</Box>
         ) : (
           <Table variant="simple" size="sm" bg="brand.card" borderRadius="md">
             <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
               <Tr>
-                <Th>Type</Th>
-                <Th>Name</Th>
-                <Th>Code</Th>
-                <Th>Context</Th>
-                <Th>Actions</Th>
+                <Th>{t("setup.tree.columns.type")}</Th>
+                <Th>{t("setup.tree.columns.name")}</Th>
+                <Th>{t("setup.tree.columns.code")}</Th>
+                <Th>{t("setup.tree.columns.context")}</Th>
+                <Th>{t("setup.tree.columns.actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
               {tree.map((c) => (
                 <Fragment key={`comp-${c.id}`}>
                   <Tr>
-                    <Td fontWeight="semibold">Competition</Td>
+                    <Td fontWeight="semibold">{t("setup.tree.rowTypes.competition")}</Td>
                     <Td>{c.name}</Td>
                     <Td>{c.slug}</Td>
                     <Td>—</Td>
@@ -839,8 +814,8 @@ export const SetupPage = () => {
                             const url = `${window.location.origin}/home/${c.public_slug}`;
                             void navigator.clipboard.writeText(url);
                             toast({
-                              title: "Link copied",
-                              description: "Leaderboard link copied to clipboard.",
+                              title: t("setup.tree.toast.linkCopied.title"),
+                              description: t("setup.tree.toast.linkCopied.description"),
                               status: "success",
                               duration: 3000,
                               isClosable: true,
@@ -848,12 +823,12 @@ export const SetupPage = () => {
                             });
                           }}
                         >
-                          Copy leaderboard link
+                          {t("setup.tree.actions.copyLeaderboardLink")}
                         </Button>
                         {!isViewer && (
                           <>
                             <Button size="xs" onClick={() => openEdit({ type: "competition", competition: c })}>
-                              Edit
+                              {t("common.actions.edit")}
                             </Button>
                             <Button
                               size="xs"
@@ -868,7 +843,7 @@ export const SetupPage = () => {
                                 })
                               }
                             >
-                              Delete
+                              {t("common.actions.delete")}
                             </Button>
                           </>
                         )}
@@ -878,7 +853,7 @@ export const SetupPage = () => {
                   {c.phases.map((p) => (
                     <Fragment key={`phase-${p.id}`}>
                       <Tr bg="blackAlpha.100">
-                        <Td pl={8}>Stage</Td>
+                        <Td pl={8}>{t("setup.tree.rowTypes.phase")}</Td>
                         <Td>{p.name}</Td>
                         <Td>{p.code}</Td>
                         <Td>{c.name}</Td>
@@ -891,8 +866,8 @@ export const SetupPage = () => {
                                 const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}`;
                                 void navigator.clipboard.writeText(url);
                                 toast({
-                                  title: "Link copied",
-                                  description: "Leaderboard link copied to clipboard.",
+                                  title: t("setup.tree.toast.linkCopied.title"),
+                                  description: t("setup.tree.toast.linkCopied.description"),
                                   status: "success",
                                   duration: 3000,
                                   isClosable: true,
@@ -900,7 +875,7 @@ export const SetupPage = () => {
                                 });
                               }}
                             >
-                              Copy leaderboard link
+                              {t("setup.tree.actions.copyLeaderboardLink")}
                             </Button>
                             {!isViewer && (
                               <>
@@ -914,7 +889,7 @@ export const SetupPage = () => {
                                     })
                                   }
                                 >
-                                  Edit
+                                  {t("common.actions.edit")}
                                 </Button>
                                 <Button
                                   size="xs"
@@ -929,7 +904,7 @@ export const SetupPage = () => {
                                     })
                                   }
                                 >
-                                  Delete
+                                  {t("common.actions.delete")}
                                 </Button>
                               </>
                             )}
@@ -938,7 +913,7 @@ export const SetupPage = () => {
                       </Tr>
                       {p.events.map((ev) => (
                         <Tr key={`event-${ev.id}`} bg="blackAlpha.50">
-                          <Td pl={12}>Event</Td>
+                          <Td pl={12}>{t("setup.tree.rowTypes.event")}</Td>
                           <Td>
                             {ev.name}
                             <Box as="span" fontSize="xs" color="gray.500" ml={2}>
@@ -956,8 +931,8 @@ export const SetupPage = () => {
                                   const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}&event=${ev.id}`;
                                   void navigator.clipboard.writeText(url);
                                   toast({
-                                    title: "Link copied",
-                                    description: "Leaderboard link copied to clipboard.",
+                                    title: t("setup.tree.toast.linkCopied.title"),
+                                    description: t("setup.tree.toast.linkCopied.description"),
                                     status: "success",
                                     duration: 3000,
                                     isClosable: true,
@@ -965,11 +940,11 @@ export const SetupPage = () => {
                                   });
                                 }}
                               >
-                                Copy leaderboard link
+                                {t("setup.tree.actions.copyLeaderboardLink")}
                               </Button>
                               {ev.is_finished ? (
                                 <Tag size="sm" colorScheme="green">
-                                  Finished
+                                  {t("setup.tree.tags.finished")}
                                 </Tag>
                               ) : isViewer ? null : (
                                 <Button
@@ -985,7 +960,7 @@ export const SetupPage = () => {
                                     finishEventDisclosure.onOpen();
                                   }}
                                 >
-                                  Finish event
+                                  {t("setup.tree.actions.finishEvent")}
                                 </Button>
                               )}
                               {!isViewer && (
@@ -1000,7 +975,7 @@ export const SetupPage = () => {
                                       })
                                     }
                                   >
-                                    Edit
+                                    {t("common.actions.edit")}
                                   </Button>
                                   <Button
                                     size="xs"
@@ -1016,7 +991,7 @@ export const SetupPage = () => {
                                       })
                                     }
                                   >
-                                    Delete
+                                    {t("common.actions.delete")}
                                   </Button>
                                 </>
                               )}
@@ -1040,16 +1015,24 @@ export const SetupPage = () => {
       >
         <AlertDialogOverlay />
         <AlertDialogContent>
-          <AlertDialogHeader>Delete {deleteTarget?.type}</AlertDialogHeader>
+          <AlertDialogHeader>
+            {t("setup.deleteDialog.title", { type: deleteTarget?.type ?? "" })}
+          </AlertDialogHeader>
           <AlertDialogBody>
-            Delete {deleteTarget?.name}? This cannot be undone.
+            {t("setup.deleteDialog.body", { name: deleteTarget?.name ?? "" })}
           </AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelDeleteRef} onClick={deleteDisclosure.onClose}>
-              Cancel
+            <Button ref={cancelDeleteRef} onClick={deleteDisclosure.onClose} isDisabled={deleteSubmitting}>
+              {t("common.actions.cancel")}
             </Button>
-            <Button colorScheme="red" onClick={confirmDelete} ml={3}>
-              Delete
+            <Button
+              colorScheme="red"
+              onClick={confirmDelete}
+              isLoading={deleteSubmitting}
+              isDisabled={deleteSubmitting}
+              ml={3}
+            >
+              {t("common.actions.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1062,16 +1045,22 @@ export const SetupPage = () => {
       >
         <AlertDialogOverlay />
         <AlertDialogContent>
-          <AlertDialogHeader>Finish event</AlertDialogHeader>
+          <AlertDialogHeader>{t("setup.finishDialog.title")}</AlertDialogHeader>
           <AlertDialogBody>
-            Finish &quot;{finishEventTarget?.eventName}&quot;? No more scores can be added after this.
+            {t("setup.finishDialog.body", { eventName: finishEventTarget?.eventName ?? "" })}
           </AlertDialogBody>
           <AlertDialogFooter>
-            <Button ref={cancelFinishRef} onClick={finishEventDisclosure.onClose}>
-              Cancel
+            <Button ref={cancelFinishRef} onClick={finishEventDisclosure.onClose} isDisabled={finishSubmitting}>
+              {t("common.actions.cancel")}
             </Button>
-            <Button colorScheme="green" onClick={confirmFinishEvent} ml={3}>
-              Finish event
+            <Button
+              colorScheme="green"
+              onClick={confirmFinishEvent}
+              isLoading={finishSubmitting}
+              isDisabled={finishSubmitting}
+              ml={3}
+            >
+              {t("setup.finishDialog.confirm")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -1081,23 +1070,17 @@ export const SetupPage = () => {
         <ModalOverlay />
         <ModalContent>
           <form onSubmit={submitEdit}>
-            <ModalHeader>Edit {editTarget?.type}</ModalHeader>
+            <ModalHeader>{t("setup.editDialog.title", { type: editTarget?.type ?? "" })}</ModalHeader>
             <ModalBody>
-              {editError && (
-                <Alert status="error" size="sm" mb={4}>
-                  <AlertIcon />
-                  {editError}
-                </Alert>
-              )}
               {editTarget?.type === "competition" && (
                 <Stack spacing={4}>
                   <FormControl isRequired>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t("setup.newCompetition.labels.name")}</FormLabel>
                     <Input value={editName} onChange={(e) => setEditName(e.target.value)} bg="white" color="black" />
                   </FormControl>
                   <FormControl isRequired>
                     <FormLabel display="flex" alignItems="center" gap={2}>
-                      Slug
+                      {t("setup.newCompetition.labels.slug")}
                       <InfoTooltip
                         label={t("setup.newCompetition.help.slug.ariaLabel")}
                         content={t("setup.newCompetition.help.slug.text")}
@@ -1106,7 +1089,7 @@ export const SetupPage = () => {
                     <Input value={editSlug} onChange={(e) => setEditSlug(e.target.value)} bg="white" color="black" />
                   </FormControl>
                   <FormControl>
-                    <FormLabel>Year</FormLabel>
+                    <FormLabel>{t("setup.newCompetition.labels.year")}</FormLabel>
                     <Input
                       type="number"
                       value={editYear}
@@ -1116,7 +1099,7 @@ export const SetupPage = () => {
                     />
                   </FormControl>
                   <FormControl>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>{t("setup.newCompetition.labels.description")}</FormLabel>
                     <Input
                       value={editDescription}
                       onChange={(e) => setEditDescription(e.target.value)}
@@ -1129,28 +1112,28 @@ export const SetupPage = () => {
               {(editTarget?.type === "phase" || editTarget?.type === "event") && (
                 <Stack spacing={4}>
                   <FormControl isRequired>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>{t("setup.common.name")}</FormLabel>
                     <Input value={editName} onChange={(e) => setEditName(e.target.value)} bg="white" color="black" />
                   </FormControl>
                   {editTarget?.type === "phase" && (
                     <FormControl>
-                      <FormLabel>Event modes</FormLabel>
+                      <FormLabel>{t("setup.newPhase.labels.eventModes")}</FormLabel>
                       <Select
                         value={editEventModes}
                         onChange={(e) => setEditEventModes(e.target.value as PhaseEventModes)}
                         bg="white"
                         color="black"
                       >
-                        <option value="BOTH">Both singles & doubles</option>
-                        <option value="SINGLES_ONLY">Singles only</option>
-                        <option value="DOUBLES_ONLY">Doubles only</option>
+                        <option value="BOTH">{t("setup.newPhase.eventModes.both")}</option>
+                        <option value="SINGLES_ONLY">{t("setup.newPhase.eventModes.singlesOnly")}</option>
+                        <option value="DOUBLES_ONLY">{t("setup.newPhase.eventModes.doublesOnly")}</option>
                       </Select>
                     </FormControl>
                   )}
                   {editTarget?.type === "event" && (
                     <>
                       <FormControl>
-                        <FormLabel>Description</FormLabel>
+                        <FormLabel>{t("setup.common.description")}</FormLabel>
                         <Textarea
                           value={editDescription}
                           onChange={(e) => setEditDescription(e.target.value)}
@@ -1162,7 +1145,7 @@ export const SetupPage = () => {
                       <FormControl>
                         {showEventTypeForEdit && (
                           <>
-                            <FormLabel>Event type</FormLabel>
+                            <FormLabel>{t("setup.newEvent.labels.eventType")}</FormLabel>
                             <Select
                               value={editEventType}
                               onChange={(e) => {
@@ -1175,42 +1158,36 @@ export const SetupPage = () => {
                               bg="white"
                               color="black"
                             >
-                              <option value="SINGLES">Singles</option>
-                              <option value="DOUBLES">Doubles</option>
+                              <option value="SINGLES">{t("setup.newEvent.eventTypes.singles")}</option>
+                              <option value="DOUBLES">{t("setup.newEvent.eventTypes.doubles")}</option>
                             </Select>
                           </>
                         )}
                       </FormControl>
                       <FormControl>
-                        <FormLabel>Gender category</FormLabel>
+                        <FormLabel>{t("setup.newEvent.labels.genderCategory")}</FormLabel>
                         <Select
                           value={editEventType === "SINGLES" && editGenderCategory === "MIXED" ? "MALE" : editGenderCategory}
                           onChange={(e) => setEditGenderCategory(e.target.value as GenderCategory)}
                           bg="white"
                           color="black"
                         >
-                          {editEventType === "DOUBLES" && <option value="MIXED">Mixed</option>}
-                          <option value="MALE">Male</option>
-                          <option value="FEMALE">Female</option>
+                          {editEventType === "DOUBLES" && <option value="MIXED">{t("setup.newEvent.genderCategories.mixed")}</option>}
+                          <option value="MALE">{t("common.gender.male")}</option>
+                          <option value="FEMALE">{t("common.gender.female")}</option>
                         </Select>
                       </FormControl>
                     </>
                   )}
-                  <FormControl>
-                    <FormLabel>Order index</FormLabel>
-                    <NumberInput value={editOrder} min={0} onChange={(_, v) => setEditOrder(v ?? 0)}>
-                      <NumberInputField bg="white" color="black" />
-                    </NumberInput>
-                  </FormControl>
                 </Stack>
               )}
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" onClick={editDisclosure.onClose}>
-                Cancel
+              <Button variant="ghost" onClick={editDisclosure.onClose} isDisabled={editSubmitting}>
+                {t("common.actions.cancel")}
               </Button>
-              <Button type="submit" colorScheme="orange" isLoading={editSubmitting}>
-                Save
+              <Button type="submit" colorScheme="orange" isLoading={editSubmitting} isDisabled={editSubmitting}>
+                {t("common.actions.save")}
               </Button>
             </ModalFooter>
           </form>

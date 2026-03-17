@@ -275,12 +275,14 @@ def finish_event(
     .count()
   )
   if remaining_unfinished == 0 and event.phase_id is not None:
-    _create_phase_champion_history(
-      db,
-      competition_id=event.competition_id,
-      phase_id=phase_id,
-    )
-    db.commit()
+    phase = db.get(Phase, phase_id)
+    if phase is not None:
+      _create_phase_champion_history(
+        db,
+        competition_id=phase.competition_id,
+        phase_id=phase_id,
+      )
+      db.commit()
 
   db.refresh(event)
   audit_log(db, current_user.id, "event.finish", "event", event_id)

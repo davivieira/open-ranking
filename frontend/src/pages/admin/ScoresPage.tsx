@@ -1,11 +1,9 @@
 import {
-  Alert,
   AlertDialog,
   AlertDialogBody,
   AlertDialogContent,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertIcon,
   Box,
   Button,
   Card,
@@ -26,6 +24,7 @@ import {
   Thead,
   Tr,
   useDisclosure,
+  useToast,
 } from "@chakra-ui/react";
 import { FormEvent, useRef, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -55,6 +54,7 @@ export const ScoresPage = () => {
   const { accessToken, user } = useAuthStore();
   const isViewer = user?.role === "VIEWER";
   const { t } = useTranslation("admin");
+  const toast = useToast();
   const navigate = useNavigate();
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [phasesWithEvents, setPhasesWithEvents] = useState<{ phase: Phase; events: Event[] }[]>([]);
@@ -89,6 +89,7 @@ export const ScoresPage = () => {
 
   const { scores, isLoading, error, fetchScores, addScore, deleteScore } = useScoresStore();
   const opts = { token: accessToken };
+  const lastToastRef = useRef<{ status: "error" | "success" | "info"; message: string } | null>(null);
 
   useEffect(() => {
     apiClient
@@ -174,6 +175,34 @@ export const ScoresPage = () => {
       setMode("existing");
     }
   }, [selectedEvent?.id]);
+
+  useEffect(() => {
+    const msg = phasesError ?? error;
+    if (!msg) return;
+    if (lastToastRef.current?.status === "error" && lastToastRef.current.message === msg) return;
+    lastToastRef.current = { status: "error", message: msg };
+    toast({
+      title: msg,
+      status: "error",
+      duration: 4000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [phasesError, error, toast]);
+
+  useEffect(() => {
+    if (!selectedEvent?.is_finished) return;
+    const msg = t("scores.info.eventFinished");
+    if (lastToastRef.current?.status === "info" && lastToastRef.current.message === msg) return;
+    lastToastRef.current = { status: "info", message: msg };
+    toast({
+      title: msg,
+      status: "info",
+      duration: 4000,
+      isClosable: true,
+      position: "bottom-right",
+    });
+  }, [selectedEvent?.is_finished, toast, t]);
 
   const buildAthletePayload = (name: string, gender: "MALE" | "FEMALE", level: string, doublesLevel: string, birthDate: string, history: string) => ({
     name,
@@ -311,13 +340,6 @@ export const ScoresPage = () => {
         {t("scores.title")}
       </Heading>
 
-      {(error || phasesError) && (
-        <Alert status="error" borderRadius="md">
-          <AlertIcon />
-          {phasesError ?? error}
-        </Alert>
-      )}
-
       {!isViewer && (
       <Card bg="brand.card">
         <CardBody>
@@ -383,7 +405,7 @@ export const ScoresPage = () => {
             </Flex>
 
             <FormControl>
-              <FormLabel>Entry Mode</FormLabel>
+              <FormLabel>{t("scores.entryMode.label")}</FormLabel>
               <RadioGroup
                 value={mode}
                 onChange={(val) => setMode(val as typeof mode)}
@@ -391,15 +413,15 @@ export const ScoresPage = () => {
                 <Stack direction="row" spacing={4} flexWrap="wrap">
                   {isDoubles ? (
                     <>
-                      <Radio value="existing">Both existing</Radio>
-                      <Radio value="new-athlete-existing-partner">New athlete + existing partner</Radio>
-                      <Radio value="existing-athlete-new-partner">Existing athlete + new partner</Radio>
-                      <Radio value="new">Both new</Radio>
+                      <Radio value="existing">{t("scores.entryMode.options.doubles.bothExisting")}</Radio>
+                      <Radio value="new-athlete-existing-partner">{t("scores.entryMode.options.doubles.newAthleteExistingPartner")}</Radio>
+                      <Radio value="existing-athlete-new-partner">{t("scores.entryMode.options.doubles.existingAthleteNewPartner")}</Radio>
+                      <Radio value="new">{t("scores.entryMode.options.doubles.bothNew")}</Radio>
                     </>
                   ) : (
                     <>
-                      <Radio value="existing">Existing athlete</Radio>
-                      <Radio value="new">New athlete</Radio>
+                      <Radio value="existing">{t("scores.entryMode.options.singles.existingAthlete")}</Radio>
+                      <Radio value="new">{t("scores.entryMode.options.singles.newAthlete")}</Radio>
                     </>
                   )}
                 </Stack>
@@ -461,48 +483,58 @@ export const ScoresPage = () => {
 
             {(mode === "new" || mode === "new-athlete-existing-partner") && (
               <Stack spacing={4}>
-                <Box fontWeight="medium">{isDoubles && mode === "new-athlete-existing-partner" ? "New Athlete 1" : "New Athlete"}</Box>
+                <Box fontWeight="medium">
+                  {isDoubles && mode === "new-athlete-existing-partner"
+                    ? t("scores.newAthlete.sectionTitleDoublesAthlete1")
+                    : t("scores.newAthlete.sectionTitle")}
+                </Box>
                 <FormControl isRequired>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t("scores.newAthlete.labels.name")}</FormLabel>
                   <Input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} bg="white" color="black" />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel>{t("scores.newAthlete.labels.gender")}</FormLabel>
                   <Select value={athleteGender} onChange={(e) => setAthleteGender(e.target.value as "MALE" | "FEMALE")} bg="white" color="black">
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
+                    <option value="MALE">{t("common.gender.male")}</option>
+                    <option value="FEMALE">{t("common.gender.female")}</option>
                   </Select>
                 </FormControl>
                 <Flex gap={4} flexWrap="wrap">
                   <FormControl maxW="180px">
-                    <FormLabel>Level (singles)</FormLabel>
+                    <FormLabel>{t("scores.newAthlete.labels.levelSingles")}</FormLabel>
                     <Select value={athleteLevel} onChange={(e) => setAthleteLevel(e.target.value)} bg="white" color="black">
-                      <option value="RX">Rx</option>
-                      <option value="SCALED">Scaled</option>
-                      <option value="BEGINNER">Beginner</option>
+                      <option value="RX">{t("common.level.rx")}</option>
+                      <option value="SCALED">{t("common.level.scaled")}</option>
+                      <option value="BEGINNER">{t("common.level.beginner")}</option>
                     </Select>
                   </FormControl>
                   <FormControl maxW="180px">
-                    <FormLabel>Doubles level</FormLabel>
+                    <FormLabel>{t("scores.newAthlete.labels.doublesLevel")}</FormLabel>
                     <Select value={athleteDoublesLevel} onChange={(e) => setAthleteDoublesLevel(e.target.value)} bg="white" color="black">
-                      <option value="DOUBLE_RX">Double Rx</option>
-                      <option value="DOUBLE_SCALED">Double Scaled</option>
-                      <option value="DOUBLE_BEGINNER">Double Beginner</option>
+                      <option value="DOUBLE_RX">{t("common.doublesLevel.doubleRx")}</option>
+                      <option value="DOUBLE_SCALED">{t("common.doublesLevel.doubleScaled")}</option>
+                      <option value="DOUBLE_BEGINNER">{t("common.doublesLevel.doubleBeginner")}</option>
                     </Select>
                   </FormControl>
                   <FormControl maxW="180px">
-                    <FormLabel>Birth date</FormLabel>
+                    <FormLabel>{t("scores.newAthlete.labels.birthDate")}</FormLabel>
                     <Input type="date" value={athleteBirthDate} onChange={(e) => setAthleteBirthDate(e.target.value)} bg="white" color="black" />
                   </FormControl>
                 </Flex>
                 <FormControl>
-                  <FormLabel>History entries (comma separated)</FormLabel>
+                  <FormLabel>{t("scores.newAthlete.labels.historyEntries")}</FormLabel>
                   <Input value={historyEntries} onChange={(e) => setHistoryEntries(e.target.value)} bg="white" color="black" />
                 </FormControl>
                 {isDoubles && mode === "new-athlete-existing-partner" && (
                   <FormControl isRequired maxW="320px">
-                    <FormLabel>Partner (existing)</FormLabel>
-                    <Select value={partnerId} onChange={(e) => setPartnerId(e.target.value)} bg="white" color="black" placeholder="Select partner">
+                    <FormLabel>{t("scores.newAthlete.labels.partnerExisting")}</FormLabel>
+                    <Select
+                      value={partnerId}
+                      onChange={(e) => setPartnerId(e.target.value)}
+                      bg="white"
+                      color="black"
+                      placeholder={t("scores.placeholders.selectPartner")}
+                    >
                       {athletes.map((a) => (
                         <option key={a.id} value={String(a.id)}>{a.name}</option>
                       ))}
@@ -516,45 +548,51 @@ export const ScoresPage = () => {
               <Stack spacing={4}>
                 {mode === "existing-athlete-new-partner" && (
                   <FormControl isRequired maxW="320px">
-                    <FormLabel>Athlete 1 (existing)</FormLabel>
-                    <Select value={athleteId} onChange={(e) => setAthleteId(e.target.value)} bg="white" color="black" placeholder="Select athlete">
+                    <FormLabel>{t("scores.newPartner.labels.athlete1Existing")}</FormLabel>
+                    <Select
+                      value={athleteId}
+                      onChange={(e) => setAthleteId(e.target.value)}
+                      bg="white"
+                      color="black"
+                      placeholder={t("scores.placeholders.selectAthlete")}
+                    >
                       {athletes.map((a) => (
                         <option key={a.id} value={String(a.id)}>{a.name}</option>
                       ))}
                     </Select>
                   </FormControl>
                 )}
-                <Box fontWeight="medium">Partner {mode === "new" ? "(new)" : "(new)"}</Box>
+                <Box fontWeight="medium">{t("scores.newPartner.sectionTitle")}</Box>
                 <FormControl isRequired>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>{t("scores.newPartner.labels.name")}</FormLabel>
                   <Input value={partnerName} onChange={(e) => setPartnerName(e.target.value)} bg="white" color="black" />
                 </FormControl>
                 <FormControl>
-                  <FormLabel>Gender</FormLabel>
+                  <FormLabel>{t("scores.newPartner.labels.gender")}</FormLabel>
                   <Select value={partnerGender} onChange={(e) => setPartnerGender(e.target.value as "MALE" | "FEMALE")} bg="white" color="black">
-                    <option value="MALE">Male</option>
-                    <option value="FEMALE">Female</option>
+                    <option value="MALE">{t("common.gender.male")}</option>
+                    <option value="FEMALE">{t("common.gender.female")}</option>
                   </Select>
                 </FormControl>
                 <Flex gap={4} flexWrap="wrap">
                   <FormControl maxW="180px">
-                    <FormLabel>Level (singles)</FormLabel>
+                    <FormLabel>{t("scores.newPartner.labels.levelSingles")}</FormLabel>
                     <Select value={partnerLevel} onChange={(e) => setPartnerLevel(e.target.value)} bg="white" color="black">
-                      <option value="RX">Rx</option>
-                      <option value="SCALED">Scaled</option>
-                      <option value="BEGINNER">Beginner</option>
+                      <option value="RX">{t("common.level.rx")}</option>
+                      <option value="SCALED">{t("common.level.scaled")}</option>
+                      <option value="BEGINNER">{t("common.level.beginner")}</option>
                     </Select>
                   </FormControl>
                   <FormControl maxW="180px">
-                    <FormLabel>Doubles level</FormLabel>
+                    <FormLabel>{t("scores.newPartner.labels.doublesLevel")}</FormLabel>
                     <Select value={partnerDoublesLevel} onChange={(e) => setPartnerDoublesLevel(e.target.value)} bg="white" color="black">
-                      <option value="DOUBLE_RX">Double Rx</option>
-                      <option value="DOUBLE_SCALED">Double Scaled</option>
-                      <option value="DOUBLE_BEGINNER">Double Beginner</option>
+                      <option value="DOUBLE_RX">{t("common.doublesLevel.doubleRx")}</option>
+                      <option value="DOUBLE_SCALED">{t("common.doublesLevel.doubleScaled")}</option>
+                      <option value="DOUBLE_BEGINNER">{t("common.doublesLevel.doubleBeginner")}</option>
                     </Select>
                   </FormControl>
                   <FormControl maxW="180px">
-                    <FormLabel>Birth date</FormLabel>
+                    <FormLabel>{t("scores.newPartner.labels.birthDate")}</FormLabel>
                     <Input type="date" value={partnerBirthDate} onChange={(e) => setPartnerBirthDate(e.target.value)} bg="white" color="black" />
                   </FormControl>
                 </Flex>
@@ -601,17 +639,11 @@ export const ScoresPage = () => {
               )}
             </FormControl>
 
-            {selectedEvent?.is_finished && (
-              <Alert status="info" borderRadius="md">
-                <AlertIcon />
-                {t("scores.info.eventFinished")}
-              </Alert>
-            )}
             <Button
               type="submit"
               colorScheme="orange"
               isLoading={isLoading}
-              loadingText="Saving..."
+              loadingText={t("scores.actions.saving")}
               alignSelf="flex-start"
               isDisabled={
                 selectedEvent?.is_finished === true ||
@@ -633,17 +665,17 @@ export const ScoresPage = () => {
 
       <Box maxH="70vh" overflowY="auto">
         <Heading size="md" mb={4}>
-          Event scores
+          {t("scores.table.title")}
         </Heading>
         <Table variant="simple" size="md">
             <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
               <Tr>
-                <Th>Rank</Th>
-                <Th>Athlete</Th>
-                <Th>Level</Th>
-                <Th>Time / Points</Th>
-                <Th isNumeric>Points</Th>
-                <Th>Actions</Th>
+                <Th>{t("scores.table.columns.rank")}</Th>
+                <Th>{t("scores.table.columns.athlete")}</Th>
+                <Th>{t("scores.table.columns.level")}</Th>
+                <Th>{t("scores.table.columns.timeOrPoints")}</Th>
+                <Th isNumeric>{t("scores.table.columns.points")}</Th>
+                <Th>{t("scores.table.columns.actions")}</Th>
               </Tr>
             </Thead>
             <Tbody>
@@ -659,8 +691,8 @@ export const ScoresPage = () => {
                   {score.time_seconds != null
                     ? formatSeconds(score.time_seconds)
                     : score.reps_points != null
-                      ? `${score.reps_points} pts`
-                      : "—"}
+                      ? t("scores.table.values.pointsSuffix", { points: score.reps_points })
+                      : t("common.emptyDash")}
                 </Td>
                 <Td isNumeric>{score.points_awarded ?? "-"}</Td>
                 <Td>
@@ -671,7 +703,7 @@ export const ScoresPage = () => {
                       variant="outline"
                       onClick={() => openDelete(score)}
                     >
-                      Delete
+                      {t("common.actions.delete")}
                     </Button>
                   )}
                 </Td>
@@ -681,7 +713,7 @@ export const ScoresPage = () => {
         </Table>
         {!scores.length && !isLoading && (
           <Box mt={2} color="gray.400">
-            No scores yet for this event.
+            {t("scores.table.empty")}
           </Box>
         )}
       </Box>
@@ -693,16 +725,18 @@ export const ScoresPage = () => {
       >
         <AlertDialogContent bg="brand.card" color="white">
           <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Delete score
+            {t("scores.deleteDialog.title")}
           </AlertDialogHeader>
           <AlertDialogBody>
             {deleteTarget && (
-              <>Are you sure you want to delete the score for <strong>{deleteTarget.label}</strong>?</>
+              <>
+                {t("scores.deleteDialog.bodyPrefix")} <strong>{deleteTarget.label}</strong>?
+              </>
             )}
           </AlertDialogBody>
           <AlertDialogFooter>
             <Button ref={cancelDeleteRef} onClick={deleteDisclosure.onClose}>
-              Cancel
+              {t("common.actions.cancel")}
             </Button>
             <Button
               colorScheme="red"
@@ -710,7 +744,7 @@ export const ScoresPage = () => {
               isLoading={deleteSubmitting}
               ml={3}
             >
-              Delete
+              {t("common.actions.delete")}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

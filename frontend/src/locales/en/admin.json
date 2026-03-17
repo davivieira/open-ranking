@@ -1,6 +1,51 @@
 {
+  "nav": {
+    "scores": "Scores",
+    "athletes": "Athlete Profiles",
+    "setup": "Setup",
+    "logout": "Logout"
+  },
   "scores": {
     "title": "Scores",
+    "entryMode": {
+      "label": "Entry Mode",
+      "options": {
+        "singles": {
+          "existingAthlete": "Existing athlete",
+          "newAthlete": "New athlete"
+        },
+        "doubles": {
+          "bothExisting": "Both existing",
+          "newAthleteExistingPartner": "New athlete + existing partner",
+          "existingAthleteNewPartner": "Existing athlete + new partner",
+          "bothNew": "Both new"
+        }
+      }
+    },
+    "newAthlete": {
+      "sectionTitle": "New athlete",
+      "sectionTitleDoublesAthlete1": "New athlete 1",
+      "labels": {
+        "name": "Name",
+        "gender": "Gender",
+        "levelSingles": "Level (singles)",
+        "doublesLevel": "Doubles level",
+        "birthDate": "Birth date",
+        "historyEntries": "History entries (comma separated)",
+        "partnerExisting": "Partner (existing)"
+      }
+    },
+    "newPartner": {
+      "sectionTitle": "Partner (new)",
+      "labels": {
+        "athlete1Existing": "Athlete 1 (existing)",
+        "name": "Name",
+        "gender": "Gender",
+        "levelSingles": "Level (singles)",
+        "doublesLevel": "Doubles level",
+        "birthDate": "Birth date"
+      }
+    },
     "labels": {
       "competition": "Competition",
       "event": "Event (by stage)",
@@ -44,14 +89,116 @@
       "eventFinished": "This event is finished; no more scores can be added."
     },
     "actions": {
-      "saveScore": "Save score"
+      "saveScore": "Save score",
+      "saving": "Saving..."
+    },
+    "table": {
+      "title": "Event scores",
+      "columns": {
+        "rank": "Rank",
+        "athlete": "Athlete",
+        "level": "Level",
+        "timeOrPoints": "Time / Points",
+        "points": "Points",
+        "actions": "Actions"
+      },
+      "values": {
+        "pointsSuffix": "{{points}} pts"
+      },
+      "empty": "No scores yet for this event."
+    },
+    "deleteDialog": {
+      "title": "Delete score",
+      "bodyPrefix": "Are you sure you want to delete the score for"
+    }
+  },
+  "common": {
+    "emptyDash": "—",
+    "actions": {
+      "delete": "Delete",
+      "cancel": "Cancel",
+      "edit": "Edit",
+      "save": "Save"
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female"
+    },
+    "level": {
+      "rx": "Rx",
+      "scaled": "Scaled",
+      "beginner": "Beginner"
+    },
+    "doublesLevel": {
+      "doubleRx": "Double Rx",
+      "doubleScaled": "Double Scaled",
+      "doubleBeginner": "Double Beginner"
     }
   },
   "athletes": {
-    "title": "Athlete Profiles"
+    "title": "Athlete Profiles",
+    "newAthlete": {
+      "title": "New athlete"
+    },
+    "list": {
+      "title": "Athletes"
+    },
+    "labels": {
+      "name": "Name",
+      "gender": "Gender",
+      "levelSingles": "Level (singles)",
+      "doublesLevel": "Doubles level",
+      "birthDate": "Birth date"
+    },
+    "filters": {
+      "gender": "Filter by gender",
+      "level": "Filter by level",
+      "all": "All",
+      "levelOptions": {
+        "allLevels": "All levels"
+      }
+    },
+    "table": {
+      "columns": {
+        "name": "Name",
+        "age": "Age",
+        "eventsParticipated": "Events participated",
+        "actions": "Actions"
+      },
+      "empty": "No athletes yet."
+    },
+    "actions": {
+      "create": "Create athlete",
+      "removeScoresFirst": "Remove all scores first"
+    },
+    "edit": {
+      "title": "Edit athlete"
+    },
+    "delete": {
+      "title": "Delete athlete",
+      "confirmPrefix": "Are you sure you want to delete",
+      "blockedHasEvents": "This athlete has {{count}} event(s). Remove all scores first."
+    },
+    "messages": {
+      "created": "Athlete created.",
+      "updated": "Athlete updated.",
+      "deleted": "Athlete deleted."
+    }
   },
   "setup": {
     "title": "Setup – Competitions, Phases, Events",
+    "import": {
+      "action": "Import JSON",
+      "invalidFormat": "Invalid format: expected { competitions: [...] }",
+      "success": "Imported {{competitions}} competition(s), {{phases}} phase(s), {{events}} event(s)."
+    },
+    "common": {
+      "selectCompetition": "Select competition",
+      "selectPhase": "Select phase",
+      "name": "Name",
+      "description": "Description",
+      "orderIndex": "Order index"
+    },
     "newCompetition": {
       "title": "New competition",
       "labels": {
@@ -72,6 +219,81 @@
       "actions": {
         "create": "Create competition"
       }
+    },
+    "newPhase": {
+      "title": "New phase",
+      "labels": {
+        "competition": "Competition",
+        "eventModes": "Event modes"
+      },
+      "eventModes": {
+        "both": "Both singles & doubles",
+        "singlesOnly": "Singles only",
+        "doublesOnly": "Doubles only"
+      },
+      "actions": {
+        "create": "Create phase"
+      }
+    },
+    "newEvent": {
+      "title": "New event",
+      "labels": {
+        "competition": "Competition",
+        "phase": "Phase",
+        "eventType": "Event type",
+        "genderCategory": "Gender category"
+      },
+      "eventTypes": {
+        "singles": "Singles",
+        "doubles": "Doubles"
+      },
+      "genderCategories": {
+        "mixed": "Mixed"
+      },
+      "actions": {
+        "create": "Create event"
+      }
+    },
+    "tree": {
+      "title": "Competitions, phases & events",
+      "empty": "No competitions yet. Create one above.",
+      "columns": {
+        "type": "Type",
+        "name": "Name",
+        "code": "Code",
+        "context": "Context",
+        "actions": "Actions"
+      },
+      "rowTypes": {
+        "competition": "Competition",
+        "phase": "Phase",
+        "event": "Event"
+      },
+      "actions": {
+        "copyLeaderboardLink": "Copy leaderboard link",
+        "finishEvent": "Finish event"
+      },
+      "tags": {
+        "finished": "Finished"
+      },
+      "toast": {
+        "linkCopied": {
+          "title": "Link copied",
+          "description": "Leaderboard link copied to clipboard."
+        }
+      }
+    },
+    "deleteDialog": {
+      "title": "Delete {{type}}",
+      "body": "Delete {{name}}? This cannot be undone."
+    },
+    "finishDialog": {
+      "title": "Finish event",
+      "body": "Finish \"{{eventName}}\"? No more scores can be added after this.",
+      "confirm": "Finish event"
+    },
+    "editDialog": {
+      "title": "Edit {{type}}"
     }
   }
 }

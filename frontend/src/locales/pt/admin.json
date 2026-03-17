@@ -1,6 +1,51 @@
 {
+  "nav": {
+    "scores": "Adicionar Pontuação",
+    "athletes": "Perfil de Atletas",
+    "setup": "Configurações",
+    "logout": "Sair"
+  },
   "scores": {
     "title": "Resultados",
+    "entryMode": {
+      "label": "Modo de Cadastro",
+      "options": {
+        "singles": {
+          "existingAthlete": "Atleta Cadastrado",
+          "newAthlete": "Novo Atleta"
+        },
+        "doubles": {
+          "bothExisting": "Ambos cadastrados",
+          "newAthleteExistingPartner": "Novo atleta + par cadastrado",
+          "existingAthleteNewPartner": "Atleta cadastrado + novo par",
+          "bothNew": "Ambos novos"
+        }
+      }
+    },
+    "newAthlete": {
+      "sectionTitle": "Novo atleta",
+      "sectionTitleDoublesAthlete1": "Novo atleta 1",
+      "labels": {
+        "name": "Nome",
+        "gender": "Gênero",
+        "levelSingles": "Nível (individual)",
+        "doublesLevel": "Nível (duplas)",
+        "birthDate": "Data de nascimento",
+        "historyEntries": "Histórico (separado por vírgula)",
+        "partnerExisting": "Par (cadastrado)"
+      }
+    },
+    "newPartner": {
+      "sectionTitle": "Par (novo)",
+      "labels": {
+        "athlete1Existing": "Atleta 1 (cadastrado)",
+        "name": "Nome",
+        "gender": "Gênero",
+        "levelSingles": "Nível (individual)",
+        "doublesLevel": "Nível (duplas)",
+        "birthDate": "Data de nascimento"
+      }
+    },
     "labels": {
       "competition": "Competição",
       "event": "Evento (por fase)",
@@ -44,14 +89,116 @@
       "eventFinished": "Este evento foi finalizado; não é possível adicionar mais resultados."
     },
     "actions": {
-      "saveScore": "Salvar resultado"
+      "saveScore": "Salvar resultado",
+      "saving": "Salvando..."
+    },
+    "table": {
+      "title": "Resultados do evento",
+      "columns": {
+        "rank": "Rank",
+        "athlete": "Atleta",
+        "level": "Nível",
+        "timeOrPoints": "Tempo / Pontos",
+        "points": "Pontos",
+        "actions": "Ações"
+      },
+      "values": {
+        "pointsSuffix": "{{points}} pts"
+      },
+      "empty": "Ainda não há resultados para este evento."
+    },
+    "deleteDialog": {
+      "title": "Excluir resultado",
+      "bodyPrefix": "Tem certeza que deseja excluir o resultado de"
+    }
+  },
+  "common": {
+    "emptyDash": "—",
+    "actions": {
+      "delete": "Excluir",
+      "cancel": "Cancelar",
+      "edit": "Editar",
+      "save": "Salvar"
+    },
+    "gender": {
+      "male": "Masculino",
+      "female": "Feminino"
+    },
+    "level": {
+      "rx": "Rx",
+      "scaled": "Scaled",
+      "beginner": "Iniciante"
+    },
+    "doublesLevel": {
+      "doubleRx": "Dupla Rx",
+      "doubleScaled": "Dupla Scaled",
+      "doubleBeginner": "Dupla Iniciante"
     }
   },
   "athletes": {
-    "title": "Perfis de atletas"
+    "title": "Perfil de Atletas",
+    "newAthlete": {
+      "title": "Novo atleta"
+    },
+    "list": {
+      "title": "Atletas"
+    },
+    "labels": {
+      "name": "Nome",
+      "gender": "Gênero",
+      "levelSingles": "Nível (individual)",
+      "doublesLevel": "Nível (duplas)",
+      "birthDate": "Data de nascimento"
+    },
+    "filters": {
+      "gender": "Filtrar por gênero",
+      "level": "Filtrar por nível",
+      "all": "Todos",
+      "levelOptions": {
+        "allLevels": "Todos os níveis"
+      }
+    },
+    "table": {
+      "columns": {
+        "name": "Nome",
+        "age": "Idade",
+        "eventsParticipated": "Eventos participados",
+        "actions": "Ações"
+      },
+      "empty": "Nenhum atleta cadastrado ainda."
+    },
+    "actions": {
+      "create": "Criar atleta",
+      "removeScoresFirst": "Remova todas as pontuações primeiro"
+    },
+    "edit": {
+      "title": "Editar atleta"
+    },
+    "delete": {
+      "title": "Excluir atleta",
+      "confirmPrefix": "Tem certeza que deseja excluir",
+      "blockedHasEvents": "Este atleta tem {{count}} evento(s). Remova todas as pontuações primeiro."
+    },
+    "messages": {
+      "created": "Atleta criado.",
+      "updated": "Atleta atualizado.",
+      "deleted": "Atleta excluído."
+    }
   },
   "setup": {
-    "title": "Configuração – Competições, Fases, Eventos",
+    "title": "Configurações – Competições, Fases, Eventos",
+    "import": {
+      "action": "Importar JSON",
+      "invalidFormat": "Formato inválido: esperado { competitions: [...] }",
+      "success": "Importado(s) {{competitions}} competição(ões), {{phases}} fase(s), {{events}} evento(s)."
+    },
+    "common": {
+      "selectCompetition": "Selecione a competição",
+      "selectPhase": "Selecione a fase",
+      "name": "Nome",
+      "description": "Descrição",
+      "orderIndex": "Ordem"
+    },
     "newCompetition": {
       "title": "Nova competição",
       "labels": {
@@ -72,6 +219,81 @@
       "actions": {
         "create": "Criar competição"
       }
+    },
+    "newPhase": {
+      "title": "Nova fase",
+      "labels": {
+        "competition": "Competição",
+        "eventModes": "Modos do evento"
+      },
+      "eventModes": {
+        "both": "Individual e duplas",
+        "singlesOnly": "Apenas individual",
+        "doublesOnly": "Apenas duplas"
+      },
+      "actions": {
+        "create": "Criar fase"
+      }
+    },
+    "newEvent": {
+      "title": "Novo evento",
+      "labels": {
+        "competition": "Competição",
+        "phase": "Fase",
+        "eventType": "Tipo do evento",
+        "genderCategory": "Categoria"
+      },
+      "eventTypes": {
+        "singles": "Individual",
+        "doubles": "Duplas"
+      },
+      "genderCategories": {
+        "mixed": "Misto"
+      },
+      "actions": {
+        "create": "Criar evento"
+      }
+    },
+    "tree": {
+      "title": "Competições, fases e eventos",
+      "empty": "Nenhuma competição ainda. Crie uma acima.",
+      "columns": {
+        "type": "Tipo",
+        "name": "Nome",
+        "code": "Código",
+        "context": "Contexto",
+        "actions": "Ações"
+      },
+      "rowTypes": {
+        "competition": "Competição",
+        "phase": "Fase",
+        "event": "Evento"
+      },
+      "actions": {
+        "copyLeaderboardLink": "Copiar link do ranking",
+        "finishEvent": "Finalizar evento"
+      },
+      "tags": {
+        "finished": "Finalizado"
+      },
+      "toast": {
+        "linkCopied": {
+          "title": "Link copiado",
+          "description": "Link do ranking copiado para a área de transferência."
+        }
+      }
+    },
+    "deleteDialog": {
+      "title": "Excluir {{type}}",
+      "body": "Excluir {{name}}? Esta ação não pode ser desfeita."
+    },
+    "finishDialog": {
+      "title": "Finalizar evento",
+      "body": "Finalizar \"{{eventName}}\"? Não será possível adicionar mais resultados depois disso.",
+      "confirm": "Finalizar evento"
+    },
+    "editDialog": {
+      "title": "Editar {{type}}"
     }
   }
 }
