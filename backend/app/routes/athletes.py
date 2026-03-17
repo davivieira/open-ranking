@@ -29,6 +29,30 @@ def _events_count(db: Session, athlete_id: int) -> int:
   )
 
 
+def _event_wins_count(db: Session, athlete_id: int) -> int:
+  return (
+    db.query(func.count(Score.id))
+    .filter(
+      or_(Score.athlete_id == athlete_id, Score.partner_id == athlete_id),
+      Score.rank_within_level == 1,
+    )
+    .scalar()
+    or 0
+  )
+
+
+def _stage_wins_count(db: Session, athlete_id: int) -> int:
+  return (
+    db.query(func.count(AthleteHistory.id))
+    .filter(
+      AthleteHistory.athlete_id == athlete_id,
+      AthleteHistory.podium_rank == 1,
+    )
+    .scalar()
+    or 0
+  )
+
+
 def _athlete_to_profile(db: Session, athlete: Athlete) -> AthleteProfile:
   return AthleteProfile(
     id=athlete.id,
@@ -39,6 +63,8 @@ def _athlete_to_profile(db: Session, athlete: Athlete) -> AthleteProfile:
     birth_date=athlete.birth_date,
     age=_age_from_birth_date(athlete.birth_date),
     events_participated=_events_count(db, athlete.id),
+    event_wins=_event_wins_count(db, athlete.id),
+    stage_wins=_stage_wins_count(db, athlete.id),
   )
 
 

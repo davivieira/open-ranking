@@ -31,6 +31,8 @@ class AthleteProfile(BaseModel):
   birth_date: Optional[date] = None
   age: Optional[int] = None
   events_participated: int = 0
+  event_wins: int = 0
+  stage_wins: int = 0
 
   class Config:
     from_attributes = True

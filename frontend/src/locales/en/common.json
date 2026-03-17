@@ -11,6 +11,25 @@
     "pasteLinkLabel": "Paste your competition link",
     "pasteLinkPlaceholder": "https://.../home/open-2025-abc123",
     "goToLeaderboard": "Go to leaderboard"
+  },
+  "athleteProfile": {
+    "notFound": "Athlete not found",
+    "print": "Print",
+    "gender": "Gender",
+    "age": "Age",
+    "levelSingles": "Level (singles)",
+    "levelDoubles": "Level (doubles)",
+    "eventsParticipated": "Events participated",
+    "eventWins": "Event wins",
+    "stageWins": "Stage wins",
+    "history": "History",
+    "noHistory": "No history entries.",
+    "winnerPrefix": "Winner: ",
+    "tags": {
+      "singles": "INDIVIDUAL",
+      "doubles": "DOUBLES",
+      "result": "RESULT"
+    }
   }
 }
 

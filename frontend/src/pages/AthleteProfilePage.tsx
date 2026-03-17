@@ -17,6 +17,7 @@ import {
 import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { apiClient } from "../lib/apiClient";
+import { useTranslation } from "react-i18next";
 
 type AthleteProfile = {
   id: number;
@@ -27,6 +28,8 @@ type AthleteProfile = {
   birth_date: string | null;
   age: number | null;
   events_participated: number;
+   event_wins: number;
+   stage_wins: number;
 };
 
 type AthleteHistoryEntry = {
@@ -51,6 +54,7 @@ type AthleteHistoryEntry = {
 export const AthleteProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation(["common"]);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [history, setHistory] = useState<AthleteHistoryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +89,11 @@ export const AthleteProfilePage = () => {
       <Box minH="100vh" bg="brand.background" color="white" py={10}>
         <Container maxW="4xl">
           <Flex justify="center" py={16}>
-            <Spinner size="xl" color="brand.yellow.400" />
+            <Spinner
+              size="xl"
+              color="brand.yellow.400"
+              label={t("loading")}
+            />
           </Flex>
         </Container>
       </Box>
@@ -97,13 +105,13 @@ export const AthleteProfilePage = () => {
       <Box minH="100vh" bg="brand.background" color="white" py={10}>
         <Container maxW="4xl">
           <Heading size="lg" color="brand.yellow.400" mb={4}>
-            {error ?? "Athlete not found"}
+            {error ?? t("athleteProfile.notFound")}
           </Heading>
           <Button
             onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
             colorScheme="orange"
           >
-            Back to Leaderboard
+            {t("backToLeaderboard")}
           </Button>
         </Container>
       </Box>
@@ -171,10 +179,10 @@ export const AthleteProfilePage = () => {
             variant="ghost"
             size="sm"
           >
-            ← Back to Leaderboard
+            ← {t("backToLeaderboard")}
           </Button>
           <Button size="sm" variant="outline" onClick={() => window.print()}>
-            Print
+            {t("athleteProfile.print")}
           </Button>
         </HStack>
 
@@ -182,18 +190,31 @@ export const AthleteProfilePage = () => {
           {profile.name}
         </Heading>
         <Stack spacing={1} mb={6} color="gray.300">
-          <Text>Gender: {profile.gender}</Text>
-          <Text>Age: {profile.age ?? "—"}</Text>
-          <Text>Level (singles): {profile.level}</Text>
-          <Text>Level (doubles): {profile.doubles_level}</Text>
-          <Text>Events participated: {profile.events_participated}</Text>
+          <Text>
+            {t("athleteProfile.gender")}: {profile.gender}
+          </Text>
+          <Text>
+            {t("athleteProfile.age")}: {profile.age ?? t("common.emptyDash", { defaultValue: "—" })}
+          </Text>
+          <Text>
+            {t("athleteProfile.levelSingles")}: {profile.level}
+          </Text>
+          <Text>
+            {t("athleteProfile.levelDoubles")}: {profile.doubles_level}
+          </Text>
+          <Text>
+            {t("athleteProfile.eventsParticipated")}: {profile.events_participated}
+          </Text>
+          <Text>
+            {t("athleteProfile.eventWins")}: {profile.event_wins}
+          </Text>
         </Stack>
 
         <Heading size="md" color="brand.yellow.400" mb={4}>
-          History
+          {t("athleteProfile.history")}
         </Heading>
         {history.length === 0 ? (
-          <Text color="gray.400">No history entries.</Text>
+          <Text color="gray.400">{t("athleteProfile.noHistory")}</Text>
         ) : (
           <Stack spacing={4}>
             {historyByPhase.map((group) => {
@@ -243,7 +264,7 @@ export const AthleteProfilePage = () => {
                               }
                               if (h.winner_name) {
                                 const winnerLine =
-                                  "Winner: " +
+                                  t("athleteProfile.winnerPrefix", { defaultValue: "Winner: " }) +
                                   h.winner_name +
                                   (h.winner_result ? ` – ${h.winner_result}` : "");
                                 parts.push(winnerLine);
@@ -287,7 +308,9 @@ export const AthleteProfilePage = () => {
                           {(h.level ?? null) && (
                             <HStack spacing={2} mt={1} flexWrap="wrap">
                               <Tag size="sm" colorScheme="purple">
-                                {isDoublesLevel(h.level) ? "DUPLAS" : "INDIVIDUAL"}
+                                {isDoublesLevel(h.level)
+                                  ? t("athleteProfile.tags.doubles")
+                                  : t("athleteProfile.tags.singles")}
                               </Tag>
                               {levelLabel(h.level) && (
                                 <Tag size="sm" colorScheme="yellow">
@@ -297,7 +320,7 @@ export const AthleteProfilePage = () => {
                               {h.athlete_result && (
                                 <Tooltip hasArrow label={h.athlete_result}>
                                   <Tag size="sm" colorScheme="teal" cursor="pointer">
-                                    RESULTADO
+                                    {t("athleteProfile.tags.result")}
                                   </Tag>
                                 </Tooltip>
                               )}

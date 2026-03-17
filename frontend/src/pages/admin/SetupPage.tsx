@@ -928,7 +928,8 @@ export const SetupPage = () => {
                                 size="xs"
                                 variant="outline"
                                 onClick={() => {
-                                  const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}&event=${ev.id}`;
+                                  const levelParam = ev.event_type === "DOUBLES" ? "DOUBLE_RX" : "RX";
+                                  const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}&event=${ev.id}&level=${levelParam}`;
                                   void navigator.clipboard.writeText(url);
                                   toast({
                                     title: t("setup.tree.toast.linkCopied.title"),

@@ -22,11 +22,13 @@ export async function exportElementToPdf(
   const pdfHeight = pdf.internal.pageSize.getHeight();
   const imgW = canvas.width;
   const imgH = canvas.height;
-  const ratio = Math.min(pdfWidth / imgW, pdfHeight / imgH);
+  // Fill the page width and anchor content to the top to avoid large
+  // empty margins above/below the leaderboard.
+  const ratio = pdfWidth / imgW;
   const w = imgW * ratio;
   const h = imgH * ratio;
   const x = (pdfWidth - w) / 2;
-  const y = (pdfHeight - h) / 2;
-  pdf.addImage(imgData, "PNG", x, y, w, h);
+  const y = 0;
+  pdf.addImage(imgData, "PNG", x, y, w, Math.min(h, pdfHeight));
   pdf.save(`${filename}.pdf`);
 }
