@@ -13,7 +13,12 @@ import {
   FormLabel,
   Heading,
   HStack,
+  IconButton,
   Input,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Modal,
   ModalBody,
   ModalContent,
@@ -21,6 +26,7 @@ import {
   ModalHeader,
   ModalOverlay,
   Select,
+  Show,
   SimpleGrid,
   Stack,
   Table,
@@ -787,83 +793,34 @@ export const SetupPage = () => {
         {tree.length === 0 ? (
           <Box color="gray.400">{t("setup.tree.empty")}</Box>
         ) : (
-          <Table variant="simple" size="sm" bg="brand.card" borderRadius="md">
-            <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
-              <Tr>
-                <Th>{t("setup.tree.columns.type")}</Th>
-                <Th>{t("setup.tree.columns.name")}</Th>
-                <Th>{t("setup.tree.columns.code")}</Th>
-                <Th>{t("setup.tree.columns.context")}</Th>
-                <Th>{t("setup.tree.columns.actions")}</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {tree.map((c) => (
-                <Fragment key={`comp-${c.id}`}>
+          <>
+            {/* Desktop / tablet table */}
+            <Show above="md">
+              <Table variant="simple" size="sm" bg="brand.card" borderRadius="md">
+                <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
                   <Tr>
-                    <Td fontWeight="semibold">{t("setup.tree.rowTypes.competition")}</Td>
-                    <Td>{c.name}</Td>
-                    <Td>{c.slug}</Td>
-                    <Td>—</Td>
-                    <Td>
-                      <HStack gap={2} flexWrap="wrap">
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          onClick={() => {
-                            const url = `${window.location.origin}/home/${c.public_slug}`;
-                            void navigator.clipboard.writeText(url);
-                            toast({
-                              title: t("setup.tree.toast.linkCopied.title"),
-                              description: t("setup.tree.toast.linkCopied.description"),
-                              status: "success",
-                              duration: 3000,
-                              isClosable: true,
-                              position: "bottom-right",
-                            });
-                          }}
-                        >
-                          {t("setup.tree.actions.copyLeaderboardLink")}
-                        </Button>
-                        {!isViewer && (
-                          <>
-                            <Button size="xs" onClick={() => openEdit({ type: "competition", competition: c })}>
-                              {t("common.actions.edit")}
-                            </Button>
-                            <Button
-                              size="xs"
-                              colorScheme="red"
-                              variant="outline"
-                              onClick={() =>
-                                openDelete({
-                                  type: "competition",
-                                  id: c.id,
-                                  name: c.name,
-                                  competitionId: c.id,
-                                })
-                              }
-                            >
-                              {t("common.actions.delete")}
-                            </Button>
-                          </>
-                        )}
-                      </HStack>
-                    </Td>
+                    <Th>{t("setup.tree.columns.type")}</Th>
+                    <Th>{t("setup.tree.columns.name")}</Th>
+                    <Th>{t("setup.tree.columns.code")}</Th>
+                    <Th>{t("setup.tree.columns.context")}</Th>
+                    <Th>{t("setup.tree.columns.actions")}</Th>
                   </Tr>
-                  {c.phases.map((p) => (
-                    <Fragment key={`phase-${p.id}`}>
-                      <Tr bg="blackAlpha.100">
-                        <Td pl={8}>{t("setup.tree.rowTypes.phase")}</Td>
-                        <Td>{p.name}</Td>
-                        <Td>{p.code}</Td>
+                </Thead>
+                <Tbody>
+                  {tree.map((c) => (
+                    <Fragment key={`comp-${c.id}`}>
+                      <Tr>
+                        <Td fontWeight="semibold">{t("setup.tree.rowTypes.competition")}</Td>
                         <Td>{c.name}</Td>
+                        <Td>{c.slug}</Td>
+                        <Td>—</Td>
                         <Td>
                           <HStack gap={2} flexWrap="wrap">
                             <Button
                               size="xs"
                               variant="outline"
                               onClick={() => {
-                                const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}`;
+                                const url = `${window.location.origin}/home/${c.public_slug}`;
                                 void navigator.clipboard.writeText(url);
                                 toast({
                                   title: t("setup.tree.toast.linkCopied.title"),
@@ -879,16 +836,7 @@ export const SetupPage = () => {
                             </Button>
                             {!isViewer && (
                               <>
-                                <Button
-                                  size="xs"
-                                  onClick={() =>
-                                    openEdit({
-                                      type: "phase",
-                                      phase: p,
-                                      competitionId: c.id,
-                                    })
-                                  }
-                                >
+                                <Button size="xs" onClick={() => openEdit({ type: "competition", competition: c })}>
                                   {t("common.actions.edit")}
                                 </Button>
                                 <Button
@@ -897,9 +845,9 @@ export const SetupPage = () => {
                                   variant="outline"
                                   onClick={() =>
                                     openDelete({
-                                      type: "phase",
-                                      id: p.id,
-                                      name: p.name,
+                                      type: "competition",
+                                      id: c.id,
+                                      name: c.name,
                                       competitionId: c.id,
                                     })
                                   }
@@ -911,25 +859,207 @@ export const SetupPage = () => {
                           </HStack>
                         </Td>
                       </Tr>
-                      {p.events.map((ev) => (
-                        <Tr key={`event-${ev.id}`} bg="blackAlpha.50">
-                          <Td pl={12}>{t("setup.tree.rowTypes.event")}</Td>
-                          <Td>
-                            {ev.name}
-                            <Box as="span" fontSize="xs" color="gray.500" ml={2}>
-                              {ev.event_type} / {ev.gender_category}
-                            </Box>
-                          </Td>
-                          <Td>{ev.code}</Td>
-                          <Td>{p.name}</Td>
-                          <Td>
-                            <HStack gap={2} flexWrap="wrap">
-                              <Button
-                                size="xs"
-                                variant="outline"
+                      {c.phases.map((p) => (
+                        <Fragment key={`phase-${p.id}`}>
+                          <Tr bg="blackAlpha.100">
+                            <Td pl={8}>{t("setup.tree.rowTypes.phase")}</Td>
+                            <Td>{p.name}</Td>
+                            <Td>{p.code}</Td>
+                            <Td>{c.name}</Td>
+                            <Td>
+                              <HStack gap={2} flexWrap="wrap">
+                                <Button
+                                  size="xs"
+                                  variant="outline"
+                                  onClick={() => {
+                                    const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}`;
+                                    void navigator.clipboard.writeText(url);
+                                    toast({
+                                      title: t("setup.tree.toast.linkCopied.title"),
+                                      description: t("setup.tree.toast.linkCopied.description"),
+                                      status: "success",
+                                      duration: 3000,
+                                      isClosable: true,
+                                      position: "bottom-right",
+                                    });
+                                  }}
+                                >
+                                  {t("setup.tree.actions.copyLeaderboardLink")}
+                                </Button>
+                                {!isViewer && (
+                                  <>
+                                    <Button
+                                      size="xs"
+                                      onClick={() =>
+                                        openEdit({
+                                          type: "phase",
+                                          phase: p,
+                                          competitionId: c.id,
+                                        })
+                                      }
+                                    >
+                                      {t("common.actions.edit")}
+                                    </Button>
+                                    <Button
+                                      size="xs"
+                                      colorScheme="red"
+                                      variant="outline"
+                                      onClick={() =>
+                                        openDelete({
+                                          type: "phase",
+                                          id: p.id,
+                                          name: p.name,
+                                          competitionId: c.id,
+                                        })
+                                      }
+                                    >
+                                      {t("common.actions.delete")}
+                                    </Button>
+                                  </>
+                                )}
+                              </HStack>
+                            </Td>
+                          </Tr>
+                          {p.events.map((ev) => (
+                            <Tr key={`event-${ev.id}`} bg="blackAlpha.50">
+                              <Td pl={12}>{t("setup.tree.rowTypes.event")}</Td>
+                              <Td>
+                                {ev.name}
+                                <Box as="span" fontSize="xs" color="gray.500" ml={2}>
+                                  {ev.event_type} / {ev.gender_category}
+                                </Box>
+                              </Td>
+                              <Td>{ev.code}</Td>
+                              <Td>{p.name}</Td>
+                              <Td>
+                                <HStack gap={2} flexWrap="wrap">
+                                  <Button
+                                    size="xs"
+                                    variant="outline"
+                                    onClick={() => {
+                                      const levelParam = ev.event_type === "DOUBLES" ? "DOUBLE_RX" : "RX";
+                                      const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}&event=${ev.id}&level=${levelParam}`;
+                                      void navigator.clipboard.writeText(url);
+                                      toast({
+                                        title: t("setup.tree.toast.linkCopied.title"),
+                                        description: t("setup.tree.toast.linkCopied.description"),
+                                        status: "success",
+                                        duration: 3000,
+                                        isClosable: true,
+                                        position: "bottom-right",
+                                      });
+                                    }}
+                                  >
+                                    {t("setup.tree.actions.copyLeaderboardLink")}
+                                  </Button>
+                                  {ev.is_finished ? (
+                                    <Tag size="sm" colorScheme="green">
+                                      {t("setup.tree.tags.finished")}
+                                    </Tag>
+                                  ) : isViewer ? null : (
+                                    <Button
+                                      size="xs"
+                                      colorScheme="green"
+                                      variant="outline"
+                                      onClick={() => {
+                                        setFinishEventTarget({
+                                          phaseId: p.id,
+                                          eventId: ev.id,
+                                          eventName: ev.name,
+                                        });
+                                        finishEventDisclosure.onOpen();
+                                      }}
+                                    >
+                                      {t("setup.tree.actions.finishEvent")}
+                                    </Button>
+                                  )}
+                                  {!isViewer && (
+                                    <>
+                                      <Button
+                                        size="xs"
+                                        onClick={() =>
+                                          openEdit({
+                                            type: "event",
+                                            event: ev,
+                                            phaseId: p.id,
+                                          })
+                                        }
+                                      >
+                                        {t("common.actions.edit")}
+                                      </Button>
+                                      <Button
+                                        size="xs"
+                                        colorScheme="red"
+                                        variant="outline"
+                                        onClick={() =>
+                                          openDelete({
+                                            type: "event",
+                                            id: ev.id,
+                                            name: ev.name,
+                                            competitionId: c.id,
+                                            phaseId: p.id,
+                                          })
+                                        }
+                                      >
+                                        {t("common.actions.delete")}
+                                      </Button>
+                                    </>
+                                  )}
+                                </HStack>
+                              </Td>
+                            </Tr>
+                          ))}
+                        </Fragment>
+                      ))}
+                    </Fragment>
+                  ))}
+                </Tbody>
+              </Table>
+            </Show>
+
+            {/* Mobile table: show only name and aggregated actions */}
+            <Show below="md">
+              <Table
+                variant="simple"
+                size="sm"
+                bg="brand.card"
+                borderRadius="md"
+                layout="fixed"
+              >
+                <Thead position="sticky" top={0} zIndex={1} bg="whiteAlpha.100">
+                  <Tr>
+                    <Th w="75%">{t("setup.tree.columns.name")}</Th>
+                    <Th w="25%" isNumeric>
+                      {t("setup.tree.columns.actions")}
+                    </Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {tree.map((c) => (
+                    <Fragment key={`comp-mobile-${c.id}`}>
+                      <Tr>
+                        <Td maxW="0">
+                          <Box fontSize="xs" color="gray.400" isTruncated>
+                            {t("setup.tree.rowTypes.competition")}
+                          </Box>
+                          <Box fontWeight="semibold" noOfLines={2}>
+                            {c.name}
+                          </Box>
+                        </Td>
+                        <Td isNumeric>
+                          <Menu>
+                            <MenuButton
+                              as={IconButton}
+                              size="xs"
+                              aria-label={t("setup.tree.columns.actions")}
+                              variant="outline"
+                            >
+                              ⋮
+                            </MenuButton>
+                            <MenuList bg="brand.card" borderColor="whiteAlpha.300">
+                              <MenuItem
                                 onClick={() => {
-                                  const levelParam = ev.event_type === "DOUBLES" ? "DOUBLE_RX" : "RX";
-                                  const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}&event=${ev.id}&level=${levelParam}`;
+                                  const url = `${window.location.origin}/home/${c.public_slug}`;
                                   void navigator.clipboard.writeText(url);
                                   toast({
                                     title: t("setup.tree.toast.linkCopied.title"),
@@ -942,70 +1072,201 @@ export const SetupPage = () => {
                                 }}
                               >
                                 {t("setup.tree.actions.copyLeaderboardLink")}
-                              </Button>
-                              {ev.is_finished ? (
-                                <Tag size="sm" colorScheme="green">
-                                  {t("setup.tree.tags.finished")}
-                                </Tag>
-                              ) : isViewer ? null : (
-                                <Button
-                                  size="xs"
-                                  colorScheme="green"
-                                  variant="outline"
-                                  onClick={() => {
-                                    setFinishEventTarget({
-                                      phaseId: p.id,
-                                      eventId: ev.id,
-                                      eventName: ev.name,
-                                    });
-                                    finishEventDisclosure.onOpen();
-                                  }}
-                                >
-                                  {t("setup.tree.actions.finishEvent")}
-                                </Button>
-                              )}
+                              </MenuItem>
                               {!isViewer && (
                                 <>
-                                  <Button
-                                    size="xs"
-                                    onClick={() =>
-                                      openEdit({
-                                        type: "event",
-                                        event: ev,
-                                        phaseId: p.id,
-                                      })
-                                    }
-                                  >
+                                  <MenuItem onClick={() => openEdit({ type: "competition", competition: c })}>
                                     {t("common.actions.edit")}
-                                  </Button>
-                                  <Button
-                                    size="xs"
-                                    colorScheme="red"
-                                    variant="outline"
+                                  </MenuItem>
+                                  <MenuItem
                                     onClick={() =>
                                       openDelete({
-                                        type: "event",
-                                        id: ev.id,
-                                        name: ev.name,
+                                        type: "competition",
+                                        id: c.id,
+                                        name: c.name,
                                         competitionId: c.id,
-                                        phaseId: p.id,
                                       })
                                     }
                                   >
                                     {t("common.actions.delete")}
-                                  </Button>
+                                  </MenuItem>
                                 </>
                               )}
-                            </HStack>
-                          </Td>
-                        </Tr>
+                            </MenuList>
+                          </Menu>
+                        </Td>
+                      </Tr>
+                      {c.phases.map((p) => (
+                        <Fragment key={`phase-mobile-${p.id}`}>
+                          <Tr bg="blackAlpha.100">
+                            <Td maxW="0">
+                              <Box fontSize="xs" color="gray.400" isTruncated>
+                                {t("setup.tree.rowTypes.phase")}
+                              </Box>
+                              <Box noOfLines={2}>{p.name}</Box>
+                            </Td>
+                            <Td isNumeric>
+                              <Menu>
+                                <MenuButton
+                                  as={IconButton}
+                                  size="xs"
+                                  aria-label={t("setup.tree.columns.actions")}
+                                  variant="outline"
+                                >
+                                  ⋮
+                                </MenuButton>
+                                <MenuList bg="brand.card" borderColor="whiteAlpha.300">
+                                  <MenuItem
+                                    onClick={() => {
+                                      const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}`;
+                                      void navigator.clipboard.writeText(url);
+                                      toast({
+                                        title: t("setup.tree.toast.linkCopied.title"),
+                                        description: t("setup.tree.toast.linkCopied.description"),
+                                        status: "success",
+                                        duration: 3000,
+                                        isClosable: true,
+                                        position: "bottom-right",
+                                      });
+                                    }}
+                                  >
+                                    {t("setup.tree.actions.copyLeaderboardLink")}
+                                  </MenuItem>
+                                  {!isViewer && (
+                                    <>
+                                      <MenuItem
+                                        onClick={() =>
+                                          openEdit({
+                                            type: "phase",
+                                            phase: p,
+                                            competitionId: c.id,
+                                          })
+                                        }
+                                      >
+                                        {t("common.actions.edit")}
+                                      </MenuItem>
+                                      <MenuItem
+                                        onClick={() =>
+                                          openDelete({
+                                            type: "phase",
+                                            id: p.id,
+                                            name: p.name,
+                                            competitionId: c.id,
+                                          })
+                                        }
+                                      >
+                                        {t("common.actions.delete")}
+                                      </MenuItem>
+                                    </>
+                                  )}
+                                </MenuList>
+                              </Menu>
+                            </Td>
+                          </Tr>
+                          {p.events.map((ev) => (
+                            <Tr key={`event-mobile-${ev.id}`} bg="blackAlpha.50">
+                              <Td maxW="0">
+                                <Box fontSize="xs" color="gray.400" isTruncated>
+                                  {t("setup.tree.rowTypes.event")}
+                                </Box>
+                                <Box noOfLines={2}>
+                                  {ev.name}
+                                  <Box as="span" fontSize="xs" color="gray.500" ml={2}>
+                                    {ev.event_type} / {ev.gender_category}
+                                  </Box>
+                                </Box>
+                              </Td>
+                              <Td isNumeric>
+                                <Menu>
+                                  <MenuButton
+                                    as={IconButton}
+                                    size="xs"
+                                    aria-label={t("setup.tree.columns.actions")}
+                                    variant="outline"
+                                  >
+                                    ⋮
+                                  </MenuButton>
+                                  <MenuList bg="brand.card" borderColor="whiteAlpha.300">
+                                    <MenuItem
+                                      onClick={() => {
+                                        const levelParam =
+                                          ev.event_type === "DOUBLES" ? "DOUBLE_RX" : "RX";
+                                        const url = `${window.location.origin}/home/${c.public_slug}?phase=${p.id}&event=${ev.id}&level=${levelParam}`;
+                                        void navigator.clipboard.writeText(url);
+                                        toast({
+                                          title: t("setup.tree.toast.linkCopied.title"),
+                                          description: t("setup.tree.toast.linkCopied.description"),
+                                          status: "success",
+                                          duration: 3000,
+                                          isClosable: true,
+                                          position: "bottom-right",
+                                        });
+                                      }}
+                                    >
+                                      {t("setup.tree.actions.copyLeaderboardLink")}
+                                    </MenuItem>
+                                    {!ev.is_finished && !isViewer && (
+                                      <MenuItem
+                                        onClick={() => {
+                                          setFinishEventTarget({
+                                            phaseId: p.id,
+                                            eventId: ev.id,
+                                            eventName: ev.name,
+                                          });
+                                          finishEventDisclosure.onOpen();
+                                        }}
+                                      >
+                                        {t("setup.tree.actions.finishEvent")}
+                                      </MenuItem>
+                                    )}
+                                    {ev.is_finished && (
+                                      <MenuItem isDisabled>
+                                        <Tag size="sm" colorScheme="green">
+                                          {t("setup.tree.tags.finished")}
+                                        </Tag>
+                                      </MenuItem>
+                                    )}
+                                    {!isViewer && (
+                                      <>
+                                        <MenuItem
+                                          onClick={() =>
+                                            openEdit({
+                                              type: "event",
+                                              event: ev,
+                                              phaseId: p.id,
+                                            })
+                                          }
+                                        >
+                                          {t("common.actions.edit")}
+                                        </MenuItem>
+                                        <MenuItem
+                                          onClick={() =>
+                                            openDelete({
+                                              type: "event",
+                                              id: ev.id,
+                                              name: ev.name,
+                                              competitionId: c.id,
+                                              phaseId: p.id,
+                                            })
+                                          }
+                                        >
+                                          {t("common.actions.delete")}
+                                        </MenuItem>
+                                      </>
+                                    )}
+                                  </MenuList>
+                                </Menu>
+                              </Td>
+                            </Tr>
+                          ))}
+                        </Fragment>
                       ))}
                     </Fragment>
                   ))}
-                </Fragment>
-              ))}
-            </Tbody>
-          </Table>
+                </Tbody>
+              </Table>
+            </Show>
+          </>
         )}
       </Box>
 

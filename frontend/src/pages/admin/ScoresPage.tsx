@@ -13,8 +13,6 @@ import {
   FormLabel,
   Heading,
   Input,
-  Radio,
-  RadioGroup,
   Select,
   Stack,
   Table,
@@ -31,6 +29,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../lib/apiClient";
 import { InfoTooltip } from "../../components/InfoTooltip";
+import { MobileToggleGroup } from "../../components/MobileToggleGroup";
 import { handleApiError } from "../../lib/handleApiError";
 import { useAuthStore } from "../../state/authStore";
 import { useScoresStore } from "../../state/scoresStore";
@@ -427,26 +426,36 @@ export const ScoresPage = () => {
 
             <FormControl>
               <FormLabel>{t("scores.entryMode.label")}</FormLabel>
-              <RadioGroup
+              <MobileToggleGroup
+                ariaLabel={t("scores.entryMode.label")}
                 value={mode}
-                onChange={(val) => setMode(val as typeof mode)}
-              >
-                <Stack direction="row" spacing={4} flexWrap="wrap">
-                  {isDoubles ? (
-                    <>
-                      <Radio value="existing">{t("scores.entryMode.options.doubles.bothExisting")}</Radio>
-                      <Radio value="new-athlete-existing-partner">{t("scores.entryMode.options.doubles.newAthleteExistingPartner")}</Radio>
-                      <Radio value="existing-athlete-new-partner">{t("scores.entryMode.options.doubles.existingAthleteNewPartner")}</Radio>
-                      <Radio value="new">{t("scores.entryMode.options.doubles.bothNew")}</Radio>
-                    </>
-                  ) : (
-                    <>
-                      <Radio value="existing">{t("scores.entryMode.options.singles.existingAthlete")}</Radio>
-                      <Radio value="new">{t("scores.entryMode.options.singles.newAthlete")}</Radio>
-                    </>
-                  )}
-                </Stack>
-              </RadioGroup>
+                onChange={(val) => setMode(val)}
+                options={
+                  isDoubles
+                    ? [
+                        {
+                          value: "existing",
+                          label: t("scores.entryMode.options.doubles.bothExisting"),
+                        },
+                        {
+                          value: "new-athlete-existing-partner",
+                          label: t("scores.entryMode.options.doubles.newAthleteExistingPartner"),
+                        },
+                        {
+                          value: "existing-athlete-new-partner",
+                          label: t("scores.entryMode.options.doubles.existingAthleteNewPartner"),
+                        },
+                        { value: "new", label: t("scores.entryMode.options.doubles.bothNew") },
+                      ]
+                    : [
+                        {
+                          value: "existing",
+                          label: t("scores.entryMode.options.singles.existingAthlete"),
+                        },
+                        { value: "new", label: t("scores.entryMode.options.singles.newAthlete") },
+                      ]
+                }
+              />
             </FormControl>
 
             {mode === "existing" && (
@@ -628,12 +637,17 @@ export const ScoresPage = () => {
                   content={t("scores.help.result.text")}
                 />
               </FormLabel>
-              <RadioGroup value={scoreType} onChange={(v) => setScoreType(v as "time" | "points")}>
-                <Stack direction="row" spacing={4} mb={3}>
-                  <Radio value="time">{t("scores.resultOptions.finishedTime")}</Radio>
-                  <Radio value="points">{t("scores.resultOptions.didntFinishPoints")}</Radio>
-                </Stack>
-              </RadioGroup>
+              <Box mb={3}>
+                <MobileToggleGroup
+                  ariaLabel={t("scores.labels.result")}
+                  value={scoreType}
+                  onChange={(v) => setScoreType(v)}
+                  options={[
+                    { value: "time", label: t("scores.resultOptions.finishedTime") },
+                    { value: "points", label: t("scores.resultOptions.didntFinishPoints") },
+                  ]}
+                />
+              </Box>
               {scoreType === "time" ? (
                 <FormControl isRequired>
                   <FormLabel>{t("scores.labels.time")}</FormLabel>

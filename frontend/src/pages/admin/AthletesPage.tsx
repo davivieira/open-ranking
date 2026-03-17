@@ -28,6 +28,7 @@ import {
   Th,
   Thead,
   Tr,
+  useBreakpointValue,
   useDisclosure,
   useToast,
 } from "@chakra-ui/react";
@@ -83,6 +84,7 @@ export const AthletesPage = () => {
 
   const editDisclosure = useDisclosure();
   const deleteDisclosure = useDisclosure();
+  const rowActionsDisclosure = useDisclosure();
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const [editTarget, setEditTarget] = useState<AthleteProfile | null>(null);
   const [editName, setEditName] = useState("");
@@ -94,6 +96,8 @@ export const AthletesPage = () => {
   const [editError, setEditError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AthleteProfile | null>(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [rowActionsTarget, setRowActionsTarget] = useState<AthleteProfile | null>(null);
+  const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   const loadAthletes = useCallback(async () => {
     try {
@@ -351,44 +355,57 @@ export const AthletesPage = () => {
               </Select>
             </FormControl>
           </Flex>
-          <Table variant="simple" size="md">
-            <Thead>
-              <Tr>
-                <Th>{t("athletes.table.columns.name")}</Th>
-                <Th>{t("athletes.table.columns.age")}</Th>
-                <Th>{t("athletes.table.columns.eventsParticipated")}</Th>
-                <Th>{t("athletes.table.columns.actions")}</Th>
-              </Tr>
-            </Thead>
-            <Tbody>
-              {athletes.map((a) => (
-                <Tr key={a.id}>
-                  <Td>{a.name}</Td>
-                  <Td>{a.age ?? t("common.emptyDash")}</Td>
-                  <Td>{a.events_participated}</Td>
-                  <Td>
-                    {!isViewer && (
-                      <HStack spacing={2}>
-                        <Button size="sm" colorScheme="blue" variant="outline" onClick={() => openEdit(a)}>
-                          {t("common.actions.edit")}
-                        </Button>
-                        <Button
-                          size="sm"
-                          colorScheme="red"
-                          variant="outline"
-                          onClick={() => openDelete(a)}
-                          isDisabled={a.events_participated > 0}
-                          title={a.events_participated > 0 ? t("athletes.actions.removeScoresFirst") : ""}
-                        >
-                          {t("common.actions.delete")}
-                        </Button>
-                      </HStack>
-                    )}
-                  </Td>
+          <Box overflowX="auto">
+            <Table variant="simple" size="md" minW="480px">
+              <Thead>
+                <Tr>
+                  <Th>{t("athletes.table.columns.name")}</Th>
+                  <Th>{t("athletes.table.columns.age")}</Th>
+                  <Th>{t("athletes.table.columns.eventsParticipated")}</Th>
+                  <Th>{t("athletes.table.columns.actions")}</Th>
                 </Tr>
-              ))}
-            </Tbody>
-          </Table>
+              </Thead>
+              <Tbody>
+                {athletes.map((a) => (
+                  <Tr
+                    key={a.id}
+                    cursor={isMobile && !isViewer ? "pointer" : "default"}
+                    onClick={
+                      isMobile && !isViewer
+                        ? () => {
+                            setRowActionsTarget(a);
+                            rowActionsDisclosure.onOpen();
+                          }
+                        : undefined
+                    }
+                  >
+                    <Td>{a.name}</Td>
+                    <Td>{a.age ?? t("common.emptyDash")}</Td>
+                    <Td>{a.events_participated}</Td>
+                    <Td>
+                      {!isViewer && (
+                        <HStack spacing={2}>
+                          <Button size="sm" colorScheme="blue" variant="outline" onClick={(e) => { e.stopPropagation(); openEdit(a); }}>
+                            {t("common.actions.edit")}
+                          </Button>
+                          <Button
+                            size="sm"
+                            colorScheme="red"
+                            variant="outline"
+                            onClick={(e) => { e.stopPropagation(); openDelete(a); }}
+                            isDisabled={a.events_participated > 0}
+                            title={a.events_participated > 0 ? t("athletes.actions.removeScoresFirst") : ""}
+                          >
+                            {t("common.actions.delete")}
+                          </Button>
+                        </HStack>
+                      )}
+                    </Td>
+                  </Tr>
+                ))}
+              </Tbody>
+            </Table>
+          </Box>
           {!athletes.length && (
             <Box mt={2} color="gray.400">
               {t("athletes.table.empty")}
@@ -396,6 +413,53 @@ export const AthletesPage = () => {
           )}
         </CardBody>
       </Card>
+
+      {/* Row actions chooser (Edit / Delete) */}
+      <Modal
+        isOpen={rowActionsDisclosure.isOpen}
+        onClose={rowActionsDisclosure.onClose}
+        isCentered
+      >
+        <ModalOverlay />
+        <ModalContent bg="brand.card" color="white">
+          <ModalHeader>{rowActionsTarget?.name}</ModalHeader>
+          <ModalBody>
+            <Box>{t("athletes.table.columns.actions")}</Box>
+          </ModalBody>
+          <ModalFooter>
+            {!isViewer && rowActionsTarget && (
+              <HStack spacing={3}>
+                <Button
+                  colorScheme="blue"
+                  variant="outline"
+                  onClick={() => {
+                    rowActionsDisclosure.onClose();
+                    openEdit(rowActionsTarget);
+                  }}
+                >
+                  {t("common.actions.edit")}
+                </Button>
+                <Button
+                  colorScheme="red"
+                  variant="outline"
+                  onClick={() => {
+                    rowActionsDisclosure.onClose();
+                    openDelete(rowActionsTarget);
+                  }}
+                  isDisabled={rowActionsTarget.events_participated > 0}
+                  title={
+                    rowActionsTarget.events_participated > 0
+                      ? t("athletes.actions.removeScoresFirst")
+                      : ""
+                  }
+                >
+                  {t("common.actions.delete")}
+                </Button>
+              </HStack>
+            )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
 
       <Modal isOpen={editDisclosure.isOpen} onClose={editDisclosure.onClose}>
         <ModalOverlay />
