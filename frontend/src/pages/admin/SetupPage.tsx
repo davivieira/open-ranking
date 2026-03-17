@@ -39,8 +39,10 @@ import {
   useToast,
 } from "@chakra-ui/react";
 import { Fragment, FormEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { apiClient } from "../../lib/apiClient";
+import { InfoTooltip } from "../../components/InfoTooltip";
 import { handleApiError } from "../../lib/handleApiError";
 import { useAuthStore } from "../../state/authStore";
 
@@ -731,7 +733,7 @@ export const SetupPage = () => {
                   <option value="">Select phase</option>
                   {phasesForEventForm.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.name}
+                      {p.code} – {p.name}
                     </option>
                   ))}
                 </Select>
