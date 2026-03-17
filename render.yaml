@@ -34,6 +34,11 @@ services:
     rootDir: frontend
     buildCommand: npm ci && npm run build
     staticPublishPath: dist
+    routes:
+      # SPA deep-link support: serve index.html for any route (React Router)
+      - type: rewrite
+        source: "/*"
+        destination: /index.html
     envVars:
       # Set by you after backend deploy (or edit this to the final backend URL)
       - key: VITE_API_BASE_URL
