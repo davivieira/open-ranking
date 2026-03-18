@@ -48,6 +48,8 @@ export const AdminLayout = () => {
               icon={colorMode === "dark" ? <SunIcon /> : <MoonIcon />}
               variant="ghost"
               onClick={toggleColorMode}
+              color="brand.navbarTitle"
+              _hover={{ color: "orange.400", bg: "whiteAlpha.200" }}
             />
             <Button as={RouterLink} to="/admin" variant="ghost">
               {t("nav.scores")}

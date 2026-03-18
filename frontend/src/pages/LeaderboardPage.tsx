@@ -32,6 +32,7 @@ import { useTranslation } from "react-i18next";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { apiClient, API_BASE_URL } from "../lib/apiClient";
 import { exportElementToPdf } from "../lib/exportToPdf";
+import { useAuthStore } from "../state/authStore";
 
 type Competition = { id: number; name: string; slug: string; public_slug: string; type: string };
 type Phase = { id: number; competition_id: number; code: string; name: string; order_index: number };
@@ -67,6 +68,8 @@ export const LeaderboardPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation("leaderboard");
   const { colorMode, toggleColorMode } = useColorMode();
+  const { accessToken } = useAuthStore();
+  const isLoggedIn = Boolean(accessToken);
 
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [competitionError, setCompetitionError] = useState<string | null>(null);
@@ -264,41 +267,46 @@ export const LeaderboardPage = () => {
               onClick={toggleColorMode}
               color="brand.navbarTitle"
               borderColor="whiteAlpha.400"
+              _hover={{ color: "orange.400", borderColor: "orange.400", bg: "whiteAlpha.200" }}
             />
-            <Show above="md">
-              <Button
-                as={RouterLink}
-                to="/login"
-                variant="outline"
-                color="brand.navbarTitle"
-                borderColor="whiteAlpha.400"
-              >
-                {t("common:signInAsAdmin")}
-              </Button>
-              <Button as={RouterLink} to="/register" variant="solid" colorScheme="orange" color="white">
-                {t("common:signUp")}
-              </Button>
-            </Show>
-            <Show below="md">
-              <Menu>
-                <MenuButton
-                  as={IconButton}
-                  aria-label={t("common:signIn")}
-                  icon={<Box as="span" fontSize="lg">☰</Box>}
-                  variant="outline"
-                  color="brand.navbarTitle"
-                  borderColor="whiteAlpha.400"
-                />
-                <MenuList>
-                  <MenuItem as={RouterLink} to="/login">
+            {!isLoggedIn && (
+              <>
+                <Show above="md">
+                  <Button
+                    as={RouterLink}
+                    to="/login"
+                    variant="outline"
+                    color="brand.navbarTitle"
+                    borderColor="whiteAlpha.400"
+                  >
                     {t("common:signInAsAdmin")}
-                  </MenuItem>
-                  <MenuItem as={RouterLink} to="/register" fontWeight="semibold">
+                  </Button>
+                  <Button as={RouterLink} to="/register" variant="solid" colorScheme="orange" color="white">
                     {t("common:signUp")}
-                  </MenuItem>
-                </MenuList>
-              </Menu>
-            </Show>
+                  </Button>
+                </Show>
+                <Show below="md">
+                  <Menu>
+                    <MenuButton
+                      as={IconButton}
+                      aria-label={t("common:signIn")}
+                      icon={<Box as="span" fontSize="lg">☰</Box>}
+                      variant="outline"
+                      color="brand.navbarTitle"
+                      borderColor="whiteAlpha.400"
+                    />
+                    <MenuList>
+                      <MenuItem as={RouterLink} to="/login">
+                        {t("common:signInAsAdmin")}
+                      </MenuItem>
+                      <MenuItem as={RouterLink} to="/register" fontWeight="semibold">
+                        {t("common:signUp")}
+                      </MenuItem>
+                    </MenuList>
+                  </Menu>
+                </Show>
+              </>
+            )}
           </HStack>
         </Flex>
 
