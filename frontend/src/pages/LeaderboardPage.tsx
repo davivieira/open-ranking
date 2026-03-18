@@ -261,6 +261,9 @@ export const LeaderboardPage = () => {
             <Button as={RouterLink} to="/login" variant="outline" color="brand.navbarTitle" borderColor="whiteAlpha.400">
               {t("common:signInAsAdmin")}
             </Button>
+            <Button as={RouterLink} to="/register" variant="solid" colorScheme="orange" color="white">
+              {t("common:signUp")}
+            </Button>
           </HStack>
         </Flex>
 

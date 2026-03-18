@@ -9,6 +9,7 @@ import {
   Button,
   Card,
   CardBody,
+  Flex,
   FormControl,
   FormLabel,
   Heading,
@@ -551,9 +552,15 @@ export const SetupPage = () => {
 
   return (
     <Stack spacing={8}>
-      <Heading size="lg" color="brand.pageTitle">
-        {t("setup.title")}
-      </Heading>
+      <Flex align="center" gap={3}>
+        <Heading size="lg" color="brand.pageTitle">
+          {t("setup.title")}
+        </Heading>
+        <InfoTooltip
+          label={t("setup.help.page.ariaLabel")}
+          content={t("setup.help.page.text")}
+        />
+      </Flex>
 
       {!isViewer && (
       <SimpleGrid columns={{ base: 1, md: 3 }} spacing={6}>
@@ -787,9 +794,15 @@ export const SetupPage = () => {
       )}
 
       <Box maxH="70vh" overflowY="auto">
-        <Heading size="md" mb={4}>
-          {t("setup.tree.title")}
-        </Heading>
+        <Flex align="center" gap={3} mb={4}>
+          <Heading size="md">
+            {t("setup.tree.title")}
+          </Heading>
+          <InfoTooltip
+            label={t("setup.help.table.ariaLabel")}
+            content={t("setup.help.table.text")}
+          />
+        </Flex>
         {tree.length === 0 ? (
           <Box color="gray.400">{t("setup.tree.empty")}</Box>
         ) : (

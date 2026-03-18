@@ -415,9 +415,12 @@ export const ScoresPage = () => {
 
   return (
     <Stack spacing={8}>
-      <Heading size="lg" color="brand.pageTitle">
-        {t("scores.title")}
-      </Heading>
+      <Flex align="center" gap={3}>
+        <Heading size="lg" color="brand.pageTitle">
+          {t("scores.title")}
+        </Heading>
+        <InfoTooltip label={t("scores.help.resultsTutorial.ariaLabel")} content={t("scores.help.resultsTutorial.text")} />
+      </Flex>
 
       {!isViewer && (
       <Card bg="brand.card">

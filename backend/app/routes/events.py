@@ -75,7 +75,7 @@ def _create_phase_champion_history(
         level_label = level.value.replace("_", " ").title()
         gender_label = gender.value.title()
         if podium_rank == 1:
-          text = f'Champions of the {phase.name} – {level_label} / {gender_label}'
+          text = f'Champion of the {phase.name} – {level_label} / {gender_label}'
         else:
           text = f'{_ordinal(podium_rank)} place overall in {phase.name} – {level_label} / {gender_label}'
 

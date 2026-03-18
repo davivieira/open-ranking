@@ -79,6 +79,10 @@
       "result": {
         "ariaLabel": "More info about results",
         "text": "Enter the result for the athlete/pair. Use time if finished, or points if they didn’t finish."
+      },
+      "resultsTutorial": {
+        "ariaLabel": "How to add results",
+        "text": "First, open the \"Setup\" menu to configure your competition structure. Then go to \"Athlete Profiles\" to register the participants of your competitions."
       }
     },
     "resultOptions": {
@@ -193,6 +197,16 @@
   },
   "setup": {
     "title": "Setup – Competitions, Phases, Events",
+    "help": {
+      "page": {
+        "ariaLabel": "How to use Setup",
+        "text": "Use this page to build your competition structure: create a competition (season), then add phases (stages), and finally add events inside each phase. Once your structure is ready, you can go to Athlete Profiles to register athletes, and then to Scores to add results."
+      },
+      "table": {
+        "ariaLabel": "How to use the structure table",
+        "text": "This table shows everything you created (competitions, phases, and events). Use the action buttons to copy the public leaderboard link, edit names/codes, delete items, or finish an event when it’s complete."
+      }
+    },
     "import": {
       "action": "Import JSON",
       "invalidFormat": "Invalid format: expected { competitions: [...] }",

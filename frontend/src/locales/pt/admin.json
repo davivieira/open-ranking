@@ -79,6 +79,10 @@
       "result": {
         "ariaLabel": "Mais informações sobre o resultado",
         "text": "Informe o resultado do atleta/par. Use tempo se finalizou o evento, ou pontos se não finalizou."
+      },
+      "resultsTutorial": {
+        "ariaLabel": "Como adicionar resultados",
+        "text": "Primeiro, acesse o menu \"Configurações\" para configurar a estrutura das competições. Depois, vá para \"Perfil de Atletas\" para registrar os participantes das suas competições."
       }
     },
     "resultOptions": {
@@ -193,6 +197,16 @@
   },
   "setup": {
     "title": "Configurações – Temporadas, Competições, Eventos",
+    "help": {
+      "page": {
+        "ariaLabel": "Como usar as configurações",
+        "text": "Use esta página para montar a estrutura da sua competição: crie uma temporada, depois adicione competições (fases) e, por fim, crie os eventos dentro de cada competição. Quando a estrutura estiver pronta, vá em \"Perfil de Atletas\" para cadastrar os atletas e depois em \"Adicionar Pontuação\" para lançar os resultados."
+      },
+      "table": {
+        "ariaLabel": "Como usar a tabela de estrutura",
+        "text": "Esta tabela mostra tudo o que você criou (temporadas, competições e eventos). Use as ações para copiar o link público do ranking, editar nomes/códigos, excluir itens ou finalizar um evento quando ele estiver concluído."
+      }
+    },
     "import": {
       "action": "Importar JSON",
       "invalidFormat": "Formato inválido: esperado { competitions: [...] }",

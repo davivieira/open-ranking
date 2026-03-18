@@ -26,11 +26,11 @@ export function InfoTooltip({ label, content }: Props) {
     >
       <IconButton
         aria-label={label}
-        icon={<InfoOutlineIcon />}
+        icon={<InfoOutlineIcon boxSize={4} />}
         variant="ghost"
-        size="xs"
-        color="whiteAlpha.800"
-        _hover={{ color: "brand.yellow.400" }}
+        size="sm"
+        color="orange.400"
+        _hover={{ color: "orange.500" }}
         onMouseEnter={onOpen}
         onMouseLeave={onClose}
         onFocus={onOpen}

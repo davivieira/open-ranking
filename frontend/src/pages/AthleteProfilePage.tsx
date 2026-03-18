@@ -14,10 +14,10 @@ import {
   Text,
   Tooltip,
 } from "@chakra-ui/react";
-import { Link as RouterLink, useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { apiClient } from "../lib/apiClient";
-import { useTranslation } from "react-i18next";
+import {Link as RouterLink, useNavigate, useParams} from "react-router-dom";
+import {useEffect, useState} from "react";
+import {apiClient} from "../lib/apiClient";
+import {useTranslation} from "react-i18next";
 
 type AthleteProfile = {
   id: number;
@@ -28,8 +28,8 @@ type AthleteProfile = {
   birth_date: string | null;
   age: number | null;
   events_participated: number;
-   event_wins: number;
-   stage_wins: number;
+  event_wins: number;
+  stage_wins: number;
 };
 
 type AthleteHistoryEntry = {
@@ -52,9 +52,9 @@ type AthleteHistoryEntry = {
 };
 
 export const AthleteProfilePage = () => {
-  const { id } = useParams<{ id: string }>();
+  const {id} = useParams<{id: string}>();
   const navigate = useNavigate();
-  const { t } = useTranslation(["common"]);
+  const {t} = useTranslation(["common"]);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [history, setHistory] = useState<AthleteHistoryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -76,12 +76,17 @@ export const AthleteProfilePage = () => {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load profile");
+        if (!cancelled)
+          setError(
+            err instanceof Error ? err.message : "Failed to load profile",
+          );
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   if (isLoading) {
@@ -89,11 +94,7 @@ export const AthleteProfilePage = () => {
       <Box minH="100vh" bg="brand.background" color="brand.text" py={10}>
         <Container maxW="4xl">
           <Flex justify="center" py={16}>
-            <Spinner
-              size="xl"
-              color="brand.yellow.400"
-              label={t("loading")}
-            />
+            <Spinner size="xl" color="brand.yellow.400" label={t("loading")} />
           </Flex>
         </Container>
       </Box>
@@ -108,7 +109,9 @@ export const AthleteProfilePage = () => {
             {error ?? t("athleteProfile.notFound")}
           </Heading>
           <Button
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+            onClick={() =>
+              window.history.length > 1 ? navigate(-1) : navigate("/")
+            }
             colorScheme="orange"
           >
             {t("backToLeaderboard")}
@@ -118,9 +121,10 @@ export const AthleteProfilePage = () => {
     );
   }
 
-  const levelParam = profile?.doubles_level ?? profile?.level ?? "RX";
   const isDoublesLevel = (level?: string | null) =>
-    level === "DOUBLE_RX" || level === "DOUBLE_SCALED" || level === "DOUBLE_BEGINNER";
+    level === "DOUBLE_RX" ||
+    level === "DOUBLE_SCALED" ||
+    level === "DOUBLE_BEGINNER";
 
   const levelLabel = (level?: string | null) => {
     switch (level) {
@@ -175,7 +179,9 @@ export const AthleteProfilePage = () => {
       <Container maxW="4xl">
         <HStack mb={6} spacing={3} className="no-print">
           <Button
-            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/"))}
+            onClick={() =>
+              window.history.length > 1 ? navigate(-1) : navigate("/")
+            }
             variant="ghost"
             size="sm"
           >
@@ -194,7 +200,8 @@ export const AthleteProfilePage = () => {
             {t("athleteProfile.gender")}: {profile.gender}
           </Text>
           <Text>
-            {t("athleteProfile.age")}: {profile.age ?? t("common.emptyDash", { defaultValue: "—" })}
+            {t("athleteProfile.age")}:{" "}
+            {profile.age ?? t("common.emptyDash", {defaultValue: "—"})}
           </Text>
           <Text>
             {t("athleteProfile.levelSingles")}: {profile.level}
@@ -203,7 +210,8 @@ export const AthleteProfilePage = () => {
             {t("athleteProfile.levelDoubles")}: {profile.doubles_level}
           </Text>
           <Text>
-            {t("athleteProfile.eventsParticipated")}: {profile.events_participated}
+            {t("athleteProfile.eventsParticipated")}:{" "}
+            {profile.events_participated}
           </Text>
           <Text>
             {t("athleteProfile.eventWins")}: {profile.event_wins}
@@ -221,11 +229,24 @@ export const AthleteProfilePage = () => {
               const bestRank = group.entries
                 .map((e) => e.podium_rank ?? null)
                 .filter((r): r is number => r !== null)
-                .reduce<number | null>((min, r) => (min === null || r < min ? r : min), null);
+                .reduce<number | null>(
+                  (min, r) => (min === null || r < min ? r : min),
+                  null,
+                );
               const trophy =
-                bestRank === 1 ? "🥇" : bestRank === 2 ? "🥈" : bestRank === 3 ? "🥉" : "";
+                bestRank === 1
+                  ? "🥇"
+                  : bestRank === 2
+                    ? "🥈"
+                    : bestRank === 3
+                      ? "🥉"
+                      : "";
+              const groupLevel =
+                group.entries.find((e) => !!e.level)?.level ??
+                profile.level ??
+                "RX";
               const path = group.slug
-                ? `/home/${group.slug}?phase=${group.phaseId}&level=${levelParam}`
+                ? `/home/${group.slug}?phase=${group.phaseId}&level=${groupLevel}`
                 : "/";
               const label =
                 group.competitionYear != null
@@ -238,19 +259,24 @@ export const AthleteProfilePage = () => {
                     to={path}
                     color="brand.link"
                     textDecoration="underline"
-                    _hover={{ color: "brand.orange.400" }}
+                    _hover={{color: "brand.orange.400"}}
                     fontWeight="medium"
                   >
                     {label}
-                    {trophy && (
-                      <Box as="span" ml={2} aria-label="podium trophy">
-                        {trophy}
-                      </Box>
-                    )}
                   </Link>
+                  {trophy && (
+                    <Box as="span" ml={2} aria-label="podium trophy">
+                      {trophy}
+                    </Box>
+                  )}
                   <List spacing={1} mt={2} pl={4}>
                     {group.entries.map((h) => (
-                      <ListItem key={h.id} display="flex" alignItems="flex-start" gap={2}>
+                      <ListItem
+                        key={h.id}
+                        display="flex"
+                        alignItems="flex-start"
+                        gap={2}
+                      >
                         <Box as="span" color="brand.link" mt={1}>
                           •
                         </Box>
@@ -264,9 +290,13 @@ export const AthleteProfilePage = () => {
                               }
                               if (h.winner_name) {
                                 const winnerLine =
-                                  t("athleteProfile.winnerPrefix", { defaultValue: "Winner: " }) +
+                                  t("athleteProfile.winnerPrefix", {
+                                    defaultValue: "Winner: ",
+                                  }) +
                                   h.winner_name +
-                                  (h.winner_result ? ` – ${h.winner_result}` : "");
+                                  (h.winner_result
+                                    ? ` – ${h.winner_result}`
+                                    : "");
                                 parts.push(winnerLine);
                               }
                               const tooltipText = parts.join("\n");
@@ -319,7 +349,11 @@ export const AthleteProfilePage = () => {
                               )}
                               {h.athlete_result && (
                                 <Tooltip hasArrow label={h.athlete_result}>
-                                  <Tag size="sm" colorScheme="teal" cursor="pointer">
+                                  <Tag
+                                    size="sm"
+                                    colorScheme="teal"
+                                    cursor="pointer"
+                                  >
                                     {t("athleteProfile.tags.result")}
                                   </Tag>
                                 </Tooltip>
