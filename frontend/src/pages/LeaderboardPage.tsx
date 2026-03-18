@@ -196,6 +196,14 @@ export const LeaderboardPage = () => {
   });
   const isPhaseFinished =
     relevantEvents.length > 0 && relevantEvents.every((e) => e.is_finished);
+  const selectedPhaseName = phases.find((p) => String(p.id) === phaseId)?.name ?? "";
+  const selectedLevelLabel = LEVEL_OPTIONS.find((o) => o.value === level)?.label ?? level;
+  const selectedGenderLabel = gender === "FEMALE" ? t("gender.female") : t("gender.male");
+  const selectedEventLabel = isPhaseFinished
+    ? t("finalRanking")
+    : eventId
+      ? events.find((e) => String(e.id) === eventId)?.name ?? ""
+      : t("placeholders.allEvents");
 
   const medalForRank = (rank: number): string => {
     if (rank === 1) return "🥇";
@@ -232,6 +240,8 @@ export const LeaderboardPage = () => {
     if (!leaderboardCardRef.current || !competition || !phaseId) return;
     setPdfLoading(true);
     try {
+      // Allow a paint so the PDF-only summary becomes visible for capture.
+      await new Promise((r) => setTimeout(r, 50));
       await exportElementToPdf(
         leaderboardCardRef.current,
         `leaderboard-${competition.public_slug}-${phaseId}`,
@@ -406,6 +416,28 @@ export const LeaderboardPage = () => {
           <Heading size="md" color="brand.pageTitle" mb={4}>
             {competition ? t("title", { competition: competition.name }) : t("title", { competition: "" })}
           </Heading>
+          {pdfLoading && competition && (
+            <Box mb={4} color="brand.subtleText" fontSize="sm">
+              <Flex gap={4} flexWrap="wrap">
+                <Box>
+                  <Box as="span" fontWeight="semibold">{t("filters.stage")}:</Box>{" "}
+                  {selectedPhaseName || "—"}
+                </Box>
+                <Box>
+                  <Box as="span" fontWeight="semibold">{t("filters.level")}:</Box>{" "}
+                  {selectedLevelLabel || "—"}
+                </Box>
+                <Box>
+                  <Box as="span" fontWeight="semibold">{t("filters.gender")}:</Box>{" "}
+                  {selectedGenderLabel || "—"}
+                </Box>
+                <Box>
+                  <Box as="span" fontWeight="semibold">{t("filters.eventOptional")}:</Box>{" "}
+                  {selectedEventLabel || "—"}
+                </Box>
+              </Flex>
+            </Box>
+          )}
           {!competition ? (
             <Box color="gray.400">Loading competition…</Box>
           ) : !canFetch ? (
