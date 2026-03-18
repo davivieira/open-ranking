@@ -1,11 +1,14 @@
 {
-  "appName": "Open Ranking",
-  "adminAppName": "Open Ranking Admin",
+  "appName": "VStrong Leaderboard",
+  "adminAppName": "VStrong Leaderboard Admin",
   "backToLeaderboard": "Voltar para o leaderboard",
   "signIn": "Entrar",
   "signInAsAdmin": "Entrar como administrador",
   "loading": "Carregando...",
   "noData": "Nenhum dado disponível",
+  "colorMode": {
+    "toggle": "Alternar tema"
+  },
   "landing": {
     "instructions": "Use o link compartilhado pelo seu estúdio para ver o leaderboard.",
     "pasteLinkLabel": "Cole o link da sua competição",
@@ -32,4 +35,3 @@
     }
   }
 }
-

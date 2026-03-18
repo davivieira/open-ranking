@@ -1,12 +1,64 @@
 import { extendTheme, ThemeConfig } from "@chakra-ui/react";
 
 const config: ThemeConfig = {
-  initialColorMode: "dark",
-  useSystemColorMode: false,
+  initialColorMode: "system",
+  useSystemColorMode: true,
 };
 
 export const theme = extendTheme({
   config,
+  semanticTokens: {
+    colors: {
+      "brand.primaryBg": {
+        default: "#1C1130",
+        _light: "#1C1130",
+      },
+      "brand.navbarBg": {
+        default: "#1C1130",
+        _light: "#1C1130",
+      },
+      "brand.navbarTitle": {
+        default: "#F7D23E",
+        _light: "#FFFFFF",
+      },
+      "brand.pageTitle": {
+        default: "#F7D23E",
+        _light: "#2C1848",
+      },
+      "brand.link": {
+        default: "#F7D23E",
+        _light: "#2C1848",
+      },
+      "brand.background": {
+        default: "#1C1130",
+        _light: "#F6F4FB",
+      },
+      "brand.card": {
+        default: "#2A1743",
+        _light: "white",
+      },
+      "brand.text": {
+        default: "#F7FAFC",
+        _light: "#1A202C",
+      },
+      "brand.subtleText": {
+        default: "#CBD5E0",
+        _light: "#4A5568",
+      },
+      "brand.tableHeaderBg": {
+        default: "rgba(255,255,255,0.08)",
+        _light: "rgba(0,0,0,0.04)",
+      },
+      "brand.tableBorder": {
+        default: "rgba(255,255,255,0.08)",
+        _light: "rgba(0,0,0,0.08)",
+      },
+      "brand.headerGradientEnd": {
+        default: "rgba(245,134,52,0.18)",
+        _light: "rgba(245,134,52,0.10)",
+      },
+    },
+  },
   colors: {
     brand: {
       purple: {
@@ -22,15 +74,13 @@ export const theme = extendTheme({
       green: {
         400: "#2ECC71",
       },
-      background: "#1C1130",
-      card: "#2A1743",
     },
   },
   styles: {
     global: {
       "html, body": {
         bg: "brand.background",
-        color: "gray.100",
+        color: "brand.text",
       },
       "@media print": {
         ".no-print": {
@@ -75,7 +125,7 @@ export const theme = extendTheme({
           thead: {
             tr: {
               th: {
-                bg: "whiteAlpha.100",
+                bg: "brand.tableHeaderBg",
                 fontWeight: "semibold",
                 textTransform: "none",
                 letterSpacing: "tight",
@@ -85,7 +135,7 @@ export const theme = extendTheme({
           tbody: {
             tr: {
               td: {
-                borderColor: "whiteAlpha.100",
+                borderColor: "brand.tableBorder",
               },
             },
           },

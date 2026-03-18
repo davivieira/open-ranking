@@ -9,6 +9,7 @@ import {
   FormLabel,
   Heading,
   HStack,
+  IconButton,
   Select,
   Spinner,
   Stack,
@@ -18,10 +19,12 @@ import {
   Th,
   Thead,
   Tr,
+  useColorMode,
 } from "@chakra-ui/react";
 import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { apiClient, API_BASE_URL } from "../lib/apiClient";
 import { exportElementToPdf } from "../lib/exportToPdf";
 
@@ -58,6 +61,7 @@ export const LeaderboardPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useTranslation("leaderboard");
+  const { colorMode, toggleColorMode } = useColorMode();
 
   const [competition, setCompetition] = useState<Competition | null>(null);
   const [competitionError, setCompetitionError] = useState<string | null>(null);
@@ -230,15 +234,34 @@ export const LeaderboardPage = () => {
   };
 
   return (
-    <Box minH="100vh" bg="brand.background" color="white" py={8}>
+    <Box minH="100vh" bg="brand.background" color="brand.text" py={8}>
       <Container maxW="6xl">
-        <Flex justify="space-between" align="center" mb={8} className="no-print">
-          <Heading as="h1" size="2xl" color="brand.yellow.400">
+        <Flex
+          justify="space-between"
+          align="center"
+          mb={8}
+          className="no-print"
+          bg="brand.navbarBg"
+          borderRadius="lg"
+          px={{ base: 4, md: 6 }}
+          py={{ base: 3, md: 4 }}
+        >
+          <Heading as="h1" size="2xl" color="brand.navbarTitle">
             {t("common:appName")}
           </Heading>
-          <Button as={RouterLink} to="/login" variant="outline">
-            {t("common:signInAsAdmin")}
-          </Button>
+          <HStack spacing={3}>
+            <IconButton
+              aria-label={t("common:colorMode.toggle")}
+              icon={colorMode === "dark" ? <SunIcon /> : <MoonIcon />}
+              variant="outline"
+              onClick={toggleColorMode}
+              color="brand.navbarTitle"
+              borderColor="whiteAlpha.400"
+            />
+            <Button as={RouterLink} to="/login" variant="outline" color="brand.navbarTitle" borderColor="whiteAlpha.400">
+              {t("common:signInAsAdmin")}
+            </Button>
+          </HStack>
         </Flex>
 
         {competitionError && (
@@ -334,7 +357,7 @@ export const LeaderboardPage = () => {
         )}
 
         <Box ref={leaderboardCardRef} bg="brand.card" borderRadius="lg" p={4} overflowX="auto">
-          <Heading size="md" color="brand.yellow.400" mb={4}>
+          <Heading size="md" color="brand.pageTitle" mb={4}>
             {competition ? t("title", { competition: competition.name }) : t("title", { competition: "" })}
           </Heading>
           {!competition ? (
@@ -365,7 +388,7 @@ export const LeaderboardPage = () => {
                           <RouterLink
                             to={`/athletes/${row.athlete.id}`}
                             style={{
-                              color: "var(--chakra-colors-brand-yellow-400)",
+                              color: "var(--chakra-colors-brand-link)",
                               textDecoration: "underline",
                             }}
                           >
@@ -380,7 +403,7 @@ export const LeaderboardPage = () => {
                           <RouterLink
                             to={`/athletes/${row.athlete_pair.athlete1.id}`}
                             style={{
-                              color: "var(--chakra-colors-brand-yellow-400)",
+                              color: "var(--chakra-colors-brand-link)",
                               textDecoration: "underline",
                             }}
                           >
@@ -390,7 +413,7 @@ export const LeaderboardPage = () => {
                           <RouterLink
                             to={`/athletes/${row.athlete_pair.athlete2.id}`}
                             style={{
-                              color: "var(--chakra-colors-brand-yellow-400)",
+                              color: "var(--chakra-colors-brand-link)",
                               textDecoration: "underline",
                             }}
                           >

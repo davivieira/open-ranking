@@ -35,11 +35,11 @@ export const LoginPage = () => {
   };
 
   return (
-    <Box minH="100vh" bg="brand.background" display="flex" alignItems="center" justifyContent="center" px={4}>
+    <Box minH="100vh" bg="brand.background" color="brand.text" display="flex" alignItems="center" justifyContent="center" px={4}>
       <Card bg="brand.card" maxW="md" w="100%">
         <CardBody>
           <Stack spacing={6}>
-            <Heading size="lg" color="brand.yellow.400" textAlign="center">
+            <Heading size="lg" color="brand.pageTitle" textAlign="center">
               {t("login.title", { ns: "auth" })}
             </Heading>
             {error && (

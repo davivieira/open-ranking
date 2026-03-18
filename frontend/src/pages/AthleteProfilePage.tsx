@@ -86,7 +86,7 @@ export const AthleteProfilePage = () => {
 
   if (isLoading) {
     return (
-      <Box minH="100vh" bg="brand.background" color="white" py={10}>
+      <Box minH="100vh" bg="brand.background" color="brand.text" py={10}>
         <Container maxW="4xl">
           <Flex justify="center" py={16}>
             <Spinner
@@ -102,9 +102,9 @@ export const AthleteProfilePage = () => {
 
   if (error || !profile) {
     return (
-      <Box minH="100vh" bg="brand.background" color="white" py={10}>
+      <Box minH="100vh" bg="brand.background" color="brand.text" py={10}>
         <Container maxW="4xl">
-          <Heading size="lg" color="brand.yellow.400" mb={4}>
+          <Heading size="lg" color="brand.pageTitle" mb={4}>
             {error ?? t("athleteProfile.notFound")}
           </Heading>
           <Button
@@ -171,7 +171,7 @@ export const AthleteProfilePage = () => {
   })();
 
   return (
-    <Box minH="100vh" bg="brand.background" color="white" py={10}>
+    <Box minH="100vh" bg="brand.background" color="brand.text" py={10}>
       <Container maxW="4xl">
         <HStack mb={6} spacing={3} className="no-print">
           <Button
@@ -186,10 +186,10 @@ export const AthleteProfilePage = () => {
           </Button>
         </HStack>
 
-        <Heading size="xl" color="brand.yellow.400" mb={2}>
+        <Heading size="xl" color="brand.pageTitle" mb={2}>
           {profile.name}
         </Heading>
-        <Stack spacing={1} mb={6} color="gray.300">
+        <Stack spacing={1} mb={6} color="brand.subtleText">
           <Text>
             {t("athleteProfile.gender")}: {profile.gender}
           </Text>
@@ -210,11 +210,11 @@ export const AthleteProfilePage = () => {
           </Text>
         </Stack>
 
-        <Heading size="md" color="brand.yellow.400" mb={4}>
+        <Heading size="md" color="brand.pageTitle" mb={4}>
           {t("athleteProfile.history")}
         </Heading>
         {history.length === 0 ? (
-          <Text color="gray.400">{t("athleteProfile.noHistory")}</Text>
+          <Text color="brand.subtleText">{t("athleteProfile.noHistory")}</Text>
         ) : (
           <Stack spacing={4}>
             {historyByPhase.map((group) => {
@@ -236,7 +236,7 @@ export const AthleteProfilePage = () => {
                   <Link
                     as={RouterLink}
                     to={path}
-                    color="brand.yellow.400"
+                    color="brand.link"
                     textDecoration="underline"
                     _hover={{ color: "brand.orange.400" }}
                     fontWeight="medium"
@@ -251,11 +251,11 @@ export const AthleteProfilePage = () => {
                   <List spacing={1} mt={2} pl={4}>
                     {group.entries.map((h) => (
                       <ListItem key={h.id} display="flex" alignItems="flex-start" gap={2}>
-                        <Box as="span" color="brand.yellow.400" mt={1}>
+                        <Box as="span" color="brand.link" mt={1}>
                           •
                         </Box>
                         <Box>
-                          <Text color="gray.300" fontSize="sm">
+                          <Text color="brand.subtleText" fontSize="sm">
                             {(() => {
                               if (!h.event_name) return h.entry;
                               const parts: string[] = [];
@@ -294,7 +294,7 @@ export const AthleteProfilePage = () => {
                                       as="span"
                                       textDecoration="underline"
                                       cursor="pointer"
-                                      color="brand.yellow.400"
+                                      color="brand.link"
                                     >
                                       {`"${h.event_name}" Event`}
                                     </Box>

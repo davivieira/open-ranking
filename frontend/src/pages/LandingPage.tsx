@@ -39,10 +39,10 @@ export const LandingPage = () => {
   };
 
   return (
-    <Box minH="100vh" bg="brand.background" color="white" py={16}>
+    <Box minH="100vh" bg="brand.background" color="brand.text" py={16}>
       <Container maxW="md">
         <Stack spacing={8}>
-          <Heading size="xl" color="brand.yellow.400" textAlign="center">
+          <Heading size="xl" color="brand.pageTitle" textAlign="center">
             {t("appName")}
           </Heading>
           <Text textAlign="center" color="gray.300">

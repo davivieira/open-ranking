@@ -415,7 +415,7 @@ export const ScoresPage = () => {
 
   return (
     <Stack spacing={8}>
-      <Heading size="lg" color="brand.yellow.400">
+      <Heading size="lg" color="brand.pageTitle">
         {t("scores.title")}
       </Heading>
 

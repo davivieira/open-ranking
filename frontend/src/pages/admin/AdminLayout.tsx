@@ -9,15 +9,18 @@ import {
   MenuItem,
   MenuList,
   Show,
+  useColorMode,
 } from "@chakra-ui/react";
-import { useTranslation } from "react-i18next";
-import { Link as RouterLink, Outlet, useNavigate } from "react-router-dom";
-import { useAuthStore } from "../../state/authStore";
+import {MoonIcon, SunIcon} from "@chakra-ui/icons";
+import {useTranslation} from "react-i18next";
+import {Link as RouterLink, Outlet, useNavigate} from "react-router-dom";
+import {useAuthStore} from "../../state/authStore";
 
 export const AdminLayout = () => {
-  const { t } = useTranslation("admin");
+  const {t} = useTranslation(["admin", "common"]);
   const navigate = useNavigate();
-  const { logout } = useAuthStore();
+  const {logout} = useAuthStore();
+  const {colorMode, toggleColorMode} = useColorMode();
 
   const handleLogout = () => {
     logout();
@@ -25,21 +28,27 @@ export const AdminLayout = () => {
   };
 
   return (
-    <Box minH="100vh" bg="brand.background" color="white">
+    <Box minH="100vh" bg="brand.background" color="brand.text">
       <Flex
         as="header"
         px={8}
         py={4}
         alignItems="center"
         justifyContent="space-between"
-        bgGradient="linear(to-r, brand.background, brand.card, rgba(245,134,52,0.18))"
+        bg="brand.navbarBg"
       >
-        <Heading size="md" color="brand.yellow.400">
-          Open Ranking Admin
+        <Heading size="md" color="brand.navbarTitle">
+          VStrong Leaderboard Admin
         </Heading>
         {/* Desktop / tablet navigation */}
         <Show above="md">
           <Flex gap={4} align="center">
+            <IconButton
+              aria-label={t("colorMode.toggle", {ns: "common"})}
+              icon={colorMode === "dark" ? <SunIcon /> : <MoonIcon />}
+              variant="ghost"
+              onClick={toggleColorMode}
+            />
             <Button as={RouterLink} to="/admin" variant="ghost">
               {t("nav.scores")}
             </Button>
@@ -68,6 +77,9 @@ export const AdminLayout = () => {
               variant="outline"
             />
             <MenuList bg="brand.card" borderColor="whiteAlpha.300">
+              <MenuItem onClick={toggleColorMode}>
+                {colorMode === "dark" ? "Light mode" : "Dark mode"}
+              </MenuItem>
               <MenuItem as={RouterLink} to="/admin">
                 {t("nav.scores")}
               </MenuItem>
@@ -88,4 +100,3 @@ export const AdminLayout = () => {
     </Box>
   );
 };
-

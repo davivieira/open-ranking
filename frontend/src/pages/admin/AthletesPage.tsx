@@ -252,7 +252,7 @@ export const AthletesPage = () => {
 
   return (
     <Stack spacing={8}>
-      <Heading size="lg" color="brand.yellow.400">
+      <Heading size="lg" color="brand.pageTitle">
         {t("athletes.title")}
       </Heading>
 

@@ -1,11 +1,14 @@
 {
-  "appName": "Open Ranking",
-  "adminAppName": "Open Ranking Admin",
+  "appName": "VStrong Leaderboard",
+  "adminAppName": "VStrong Leaderboard Admin",
   "backToLeaderboard": "Back to Leaderboard",
   "signIn": "Sign in",
   "signInAsAdmin": "Sign in as Admin",
   "loading": "Loading...",
   "noData": "No data available",
+  "colorMode": {
+    "toggle": "Toggle color mode"
+  },
   "landing": {
     "instructions": "Use the link shared by your studio to view the leaderboard.",
     "pasteLinkLabel": "Paste your competition link",
@@ -32,4 +35,3 @@
     }
   }
 }
-
