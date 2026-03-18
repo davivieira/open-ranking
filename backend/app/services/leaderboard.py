@@ -75,7 +75,9 @@ def get_leaderboard(
       and (e.event_type == EventType.DOUBLES if is_doubles else e.event_type == EventType.SINGLES)
     }
 
-  totals: dict[tuple, tuple[float, int, Union[AthleteRef, AthletePairRef]]] = {}
+  # value: (total_pts, event_count, victories_count, best_single_event_rank, ref)
+  _BIG = 999999
+  totals: dict[tuple, tuple[float, int, int, int, Union[AthleteRef, AthletePairRef]]] = {}
 
   for s in scores:
     pts = s.points_awarded or 0
@@ -87,6 +89,9 @@ def get_leaderboard(
       continue
     if event_id is None and (allowed_event_ids is None or ev.id not in allowed_event_ids):
       continue
+
+    victory = 1 if s.rank_within_level == 1 else 0
+    best_rank = s.rank_within_level if s.rank_within_level is not None else _BIG
 
     if is_doubles:
       if s.partner_id is None or s.athlete is None or s.partner is None:
@@ -112,26 +117,32 @@ def get_leaderboard(
       ref = AthleteRef(id=a.id, name=a.name)
 
     if key in totals:
-      prev_pts, prev_cnt, _ = totals[key]
-      totals[key] = (prev_pts + pts, prev_cnt + 1, ref)
+      prev_pts, prev_cnt, prev_wins, prev_best, _ = totals[key]
+      totals[key] = (
+        prev_pts + pts,
+        prev_cnt + 1,
+        prev_wins + victory,
+        min(prev_best, best_rank),
+        ref,
+      )
     else:
-      totals[key] = (pts, 1, ref)
+      totals[key] = (pts, 1, victory, best_rank, ref)
 
-  sorted_items = sorted(totals.items(), key=lambda x: -x[1][0])
+  def _sort_key(item: tuple) -> tuple:
+    key, (total_pts, ev_count, victories, best_rank, _) = item
+    return (-total_pts, -victories, best_rank, key)
+
+  sorted_items = sorted(totals.items(), key=_sort_key)
 
   result: list[LeaderboardEntry] = []
-  rank = 0
-  prev_pts: float | None = None
-  rank_delta = 0
+  prev_rank_key: tuple[float, int, int | None] | None = None
+  rank = 1
 
-  for key, (total_pts, ev_count, ref) in sorted_items:
-    if prev_pts is not None and total_pts < prev_pts:
-      rank += rank_delta
-      rank_delta = 0
-    rank_delta += 1
-    if prev_pts is None:
-      rank = 1
-    prev_pts = total_pts
+  for i, (key, (total_pts, ev_count, victories, best_rank, ref)) in enumerate(sorted_items):
+    rank_key = (total_pts, victories, best_rank if victories == 0 else None)
+    if rank_key != prev_rank_key:
+      rank = i + 1
+    prev_rank_key = rank_key
 
     if is_doubles:
       result.append(
