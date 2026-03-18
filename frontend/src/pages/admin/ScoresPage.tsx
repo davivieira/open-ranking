@@ -191,6 +191,8 @@ export const ScoresPage = () => {
   const selectedEvent = eventOptions.find(({ ev }) => ev.id === eventId)?.ev;
   const phaseId = selectedEvent?.phase_id ?? null;
   const isDoubles = selectedEvent?.event_type === "DOUBLES";
+  const hasCompetitionAndEvent = competitionId !== "" && eventId !== "";
+  const isFormEnabled = hasCompetitionAndEvent && selectedEvent?.is_finished !== true;
 
   const athletes = selectedEvent?.gender_category === "MIXED"
     ? allAthletes
@@ -207,6 +209,12 @@ export const ScoresPage = () => {
       setMode("existing");
     }
   }, [selectedEvent?.id]);
+
+  // Reset dependent fields whenever competition or event changes.
+  useEffect(() => {
+    clearForm();
+    setMode("existing");
+  }, [competitionId, eventId]);
 
   useEffect(() => {
     const rawMsg = phasesError ?? error;
@@ -341,8 +349,46 @@ export const ScoresPage = () => {
       }
     }
 
-    const ok = await addScore(basePayload);
-    if (ok) clearForm();
+    const createdNewAthlete =
+      Object.prototype.hasOwnProperty.call(basePayload, "athlete") ||
+      Object.prototype.hasOwnProperty.call(basePayload, "partner");
+
+    const result = await addScore(basePayload);
+    if (result.ok) {
+      if (createdNewAthlete) {
+        const nextAthletes: Athlete[] = [];
+        const a = result.createdScore.athlete;
+        if (a) {
+          nextAthletes.push({
+            id: a.id,
+            name: a.name,
+            gender: a.gender,
+            level: a.level,
+            doubles_level: a.doubles_level,
+          });
+        }
+        const p = result.createdScore.partner;
+        if (p) {
+          nextAthletes.push({
+            id: p.id,
+            name: p.name,
+            gender: p.gender,
+            level: p.level,
+            doubles_level: p.doubles_level,
+          });
+        }
+
+        if (nextAthletes.length > 0) {
+          setAllAthletes((prev) => {
+            const byId = new Map<number, Athlete>();
+            for (const x of prev) byId.set(x.id, x);
+            for (const x of nextAthletes) byId.set(x.id, x);
+            return Array.from(byId.values()).sort((x, y) => x.name.localeCompare(y.name));
+          });
+        }
+      }
+      clearForm();
+    }
   };
 
   const openDelete = (score: { id: number; athlete: { name: string }; partner?: { name: string } | null }) => {
@@ -443,6 +489,7 @@ export const ScoresPage = () => {
                 ariaLabel={t("scores.entryMode.label")}
                 value={mode}
                 onChange={(val) => setMode(val)}
+                isDisabled={!isFormEnabled}
                 options={
                   isDoubles
                     ? [
@@ -487,6 +534,7 @@ export const ScoresPage = () => {
                     bg="white"
                     color="black"
                     placeholder={t("scores.placeholders.selectAthlete")}
+                    isDisabled={!isFormEnabled}
                   >
                     {athletes.map((a) => (
                       <option key={a.id} value={String(a.id)}>
@@ -510,6 +558,7 @@ export const ScoresPage = () => {
                       bg="white"
                       color="black"
                       placeholder={t("scores.placeholders.selectPartner")}
+                      isDisabled={!isFormEnabled}
                     >
                       {athletes
                         .filter((a) => String(a.id) !== athleteId)
@@ -531,11 +580,11 @@ export const ScoresPage = () => {
                     ? t("scores.newAthlete.sectionTitleDoublesAthlete1")
                     : t("scores.newAthlete.sectionTitle")}
                 </Box>
-                <FormControl isRequired>
+                <FormControl isRequired isDisabled={!isFormEnabled}>
                   <FormLabel>{t("scores.newAthlete.labels.name")}</FormLabel>
                   <Input value={athleteName} onChange={(e) => setAthleteName(e.target.value)} bg="white" color="black" />
                 </FormControl>
-                <FormControl>
+                <FormControl isDisabled={!isFormEnabled}>
                   <FormLabel>{t("scores.newAthlete.labels.gender")}</FormLabel>
                   <Select value={athleteGender} onChange={(e) => setAthleteGender(e.target.value as "MALE" | "FEMALE")} bg="white" color="black">
                     <option value="MALE">{t("common.gender.male")}</option>
@@ -543,7 +592,7 @@ export const ScoresPage = () => {
                   </Select>
                 </FormControl>
                 <Flex gap={4} flexWrap="wrap">
-                  <FormControl maxW="180px">
+                  <FormControl maxW="180px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newAthlete.labels.levelSingles")}</FormLabel>
                     <Select value={athleteLevel} onChange={(e) => setAthleteLevel(e.target.value)} bg="white" color="black">
                       <option value="RX">{t("common.level.rx")}</option>
@@ -551,7 +600,7 @@ export const ScoresPage = () => {
                       <option value="BEGINNER">{t("common.level.beginner")}</option>
                     </Select>
                   </FormControl>
-                  <FormControl maxW="180px">
+                  <FormControl maxW="180px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newAthlete.labels.doublesLevel")}</FormLabel>
                     <Select value={athleteDoublesLevel} onChange={(e) => setAthleteDoublesLevel(e.target.value)} bg="white" color="black">
                       <option value="DOUBLE_RX">{t("common.doublesLevel.doubleRx")}</option>
@@ -559,17 +608,17 @@ export const ScoresPage = () => {
                       <option value="DOUBLE_BEGINNER">{t("common.doublesLevel.doubleBeginner")}</option>
                     </Select>
                   </FormControl>
-                  <FormControl maxW="180px">
+                  <FormControl maxW="180px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newAthlete.labels.birthDate")}</FormLabel>
                     <Input type="date" value={athleteBirthDate} onChange={(e) => setAthleteBirthDate(e.target.value)} bg="white" color="black" />
                   </FormControl>
                 </Flex>
-                <FormControl>
+                <FormControl isDisabled={!isFormEnabled}>
                   <FormLabel>{t("scores.newAthlete.labels.historyEntries")}</FormLabel>
                   <Input value={historyEntries} onChange={(e) => setHistoryEntries(e.target.value)} bg="white" color="black" />
                 </FormControl>
                 {isDoubles && mode === "new-athlete-existing-partner" && (
-                  <FormControl isRequired maxW="320px">
+                  <FormControl isRequired maxW="320px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newAthlete.labels.partnerExisting")}</FormLabel>
                     <Select
                       value={partnerId}
@@ -590,7 +639,7 @@ export const ScoresPage = () => {
             {(mode === "existing-athlete-new-partner" || (mode === "new" && isDoubles)) && (
               <Stack spacing={4}>
                 {mode === "existing-athlete-new-partner" && (
-                  <FormControl isRequired maxW="320px">
+                  <FormControl isRequired maxW="320px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newPartner.labels.athlete1Existing")}</FormLabel>
                     <Select
                       value={athleteId}
@@ -606,11 +655,11 @@ export const ScoresPage = () => {
                   </FormControl>
                 )}
                 <Box fontWeight="medium">{t("scores.newPartner.sectionTitle")}</Box>
-                <FormControl isRequired>
+                <FormControl isRequired isDisabled={!isFormEnabled}>
                   <FormLabel>{t("scores.newPartner.labels.name")}</FormLabel>
                   <Input value={partnerName} onChange={(e) => setPartnerName(e.target.value)} bg="white" color="black" />
                 </FormControl>
-                <FormControl>
+                <FormControl isDisabled={!isFormEnabled}>
                   <FormLabel>{t("scores.newPartner.labels.gender")}</FormLabel>
                   <Select value={partnerGender} onChange={(e) => setPartnerGender(e.target.value as "MALE" | "FEMALE")} bg="white" color="black">
                     <option value="MALE">{t("common.gender.male")}</option>
@@ -618,7 +667,7 @@ export const ScoresPage = () => {
                   </Select>
                 </FormControl>
                 <Flex gap={4} flexWrap="wrap">
-                  <FormControl maxW="180px">
+                  <FormControl maxW="180px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newPartner.labels.levelSingles")}</FormLabel>
                     <Select value={partnerLevel} onChange={(e) => setPartnerLevel(e.target.value)} bg="white" color="black">
                       <option value="RX">{t("common.level.rx")}</option>
@@ -626,7 +675,7 @@ export const ScoresPage = () => {
                       <option value="BEGINNER">{t("common.level.beginner")}</option>
                     </Select>
                   </FormControl>
-                  <FormControl maxW="180px">
+                  <FormControl maxW="180px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newPartner.labels.doublesLevel")}</FormLabel>
                     <Select value={partnerDoublesLevel} onChange={(e) => setPartnerDoublesLevel(e.target.value)} bg="white" color="black">
                       <option value="DOUBLE_RX">{t("common.doublesLevel.doubleRx")}</option>
@@ -634,7 +683,7 @@ export const ScoresPage = () => {
                       <option value="DOUBLE_BEGINNER">{t("common.doublesLevel.doubleBeginner")}</option>
                     </Select>
                   </FormControl>
-                  <FormControl maxW="180px">
+                  <FormControl maxW="180px" isDisabled={!isFormEnabled}>
                     <FormLabel>{t("scores.newPartner.labels.birthDate")}</FormLabel>
                     <Input type="date" value={partnerBirthDate} onChange={(e) => setPartnerBirthDate(e.target.value)} bg="white" color="black" />
                   </FormControl>
@@ -642,7 +691,7 @@ export const ScoresPage = () => {
               </Stack>
             )}
 
-            <FormControl isRequired>
+            <FormControl isRequired isDisabled={!isFormEnabled}>
               <FormLabel display="flex" alignItems="center" gap={2}>
                 {t("scores.labels.result")}
                 <InfoTooltip
@@ -655,6 +704,7 @@ export const ScoresPage = () => {
                   ariaLabel={t("scores.labels.result")}
                   value={scoreType}
                   onChange={(v) => setScoreType(v)}
+                  isDisabled={!isFormEnabled}
                   options={[
                     { value: "time", label: t("scores.resultOptions.finishedTime") },
                     { value: "points", label: t("scores.resultOptions.didntFinishPoints") },
@@ -670,6 +720,7 @@ export const ScoresPage = () => {
                     placeholder={t("scores.placeholders.time")}
                     bg="white"
                     color="black"
+                    isDisabled={!isFormEnabled}
                   />
                 </FormControl>
               ) : (
@@ -682,6 +733,7 @@ export const ScoresPage = () => {
                     onChange={(e) => setPointsInput(e.target.value)}
                     bg="white"
                     color="black"
+                    isDisabled={!isFormEnabled}
                   />
                 </FormControl>
               )}

@@ -192,21 +192,21 @@
     }
   },
   "setup": {
-    "title": "Configurações – Competições, Fases, Eventos",
+    "title": "Configurações – Temporadas, Competições, Eventos",
     "import": {
       "action": "Importar JSON",
       "invalidFormat": "Formato inválido: esperado { competitions: [...] }",
-      "success": "Importado(s) {{competitions}} competição(ões), {{phases}} fase(s), {{events}} evento(s)."
+      "success": "Importado(s) {{competitions}} temporada(s), {{phases}} competição(ões), {{events}} evento(s)."
     },
     "common": {
-      "selectCompetition": "Selecione a competição",
-      "selectPhase": "Selecione a fase",
+      "selectCompetition": "Selecione a temporada",
+      "selectPhase": "Selecione a competição",
       "name": "Nome",
       "description": "Descrição",
       "orderIndex": "Ordem"
     },
     "newCompetition": {
-      "title": "Nova competição",
+      "title": "Nova temporada",
       "labels": {
         "name": "Nome",
         "slug": "Slug",
@@ -223,11 +223,11 @@
         }
       },
       "actions": {
-        "create": "Criar competição"
+        "create": "Criar temporada"
       }
     },
     "newPhase": {
-      "title": "Nova fase",
+      "title": "Nova competição",
       "labels": {
         "competition": "Competição",
         "eventModes": "Modos do evento"
@@ -238,7 +238,7 @@
         "doublesOnly": "Apenas duplas"
       },
       "actions": {
-        "create": "Criar fase"
+        "create": "Criar competição"
       }
     },
     "newEvent": {
@@ -261,8 +261,8 @@
       }
     },
     "tree": {
-      "title": "Competições, fases e eventos",
-      "empty": "Nenhuma competição ainda. Crie uma acima.",
+      "title": "Temporadas, competições e eventos",
+      "empty": "Nenhuma temporada ainda. Crie uma acima.",
       "columns": {
         "type": "Tipo",
         "name": "Nome",
@@ -271,8 +271,8 @@
         "actions": "Ações"
       },
       "rowTypes": {
-        "competition": "Competição",
-        "phase": "Fase",
+        "competition": "Temporada",
+        "phase": "Competição",
         "event": "Evento"
       },
       "actions": {
@@ -303,4 +303,3 @@
     }
   }
 }
-

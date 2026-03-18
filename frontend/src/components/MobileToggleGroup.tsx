@@ -21,6 +21,7 @@ type Props<T extends string> = {
   options: MobileToggleOption<T>[];
   ariaLabel?: string;
   desktopDirection?: "row" | "column";
+  isDisabled?: boolean;
 };
 
 export function MobileToggleGroup<T extends string>({
@@ -29,15 +30,24 @@ export function MobileToggleGroup<T extends string>({
   options,
   ariaLabel,
   desktopDirection = "row",
+  isDisabled = false,
 }: Props<T>) {
   const isMobile = useBreakpointValue({ base: true, md: false }) ?? false;
 
   if (!isMobile) {
     return (
-      <RadioGroup value={value} onChange={(val) => onChange(val as T)}>
+      <RadioGroup
+        value={value}
+        onChange={(val) => onChange(val as T)}
+        isDisabled={isDisabled}
+      >
         <Stack direction={desktopDirection} spacing={4} flexWrap="wrap">
           {options.map((o) => (
-            <Radio key={o.value} value={o.value} isDisabled={o.isDisabled}>
+            <Radio
+              key={o.value}
+              value={o.value}
+              isDisabled={isDisabled || o.isDisabled}
+            >
               {o.label}
             </Radio>
           ))}
@@ -61,7 +71,7 @@ export function MobileToggleGroup<T extends string>({
               <Button
                 size="sm"
                 onClick={() => onChange(o.value)}
-                isDisabled={o.isDisabled}
+                isDisabled={isDisabled || o.isDisabled}
                 variant={isSelected ? "solid" : "outline"}
                 colorScheme="orange"
                 role="radio"
