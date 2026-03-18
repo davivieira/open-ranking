@@ -427,8 +427,13 @@ export const ScoresPage = () => {
         <CardBody>
           <Stack spacing={6} as="form" onSubmit={handleSubmit}>
             <Flex gap={4} flexWrap="wrap">
-              <FormControl maxW="280px" isRequired>
-                <FormLabel>{t("scores.labels.competition")}</FormLabel>
+              <FormControl maxW="280px">
+                <FormLabel display="flex" alignItems="center" gap={2} minH="32px">
+                  {t("scores.labels.competition")}
+                  <Box as="span" color="red.400" fontWeight="bold" display="inline-block" lineHeight="1">
+                    *
+                  </Box>
+                </FormLabel>
                 <Select
                   value={competitionId === "" ? "" : String(competitionId)}
                   onChange={(e) =>
@@ -445,9 +450,12 @@ export const ScoresPage = () => {
                   ))}
                 </Select>
               </FormControl>
-              <FormControl maxW="320px" isRequired>
-                <FormLabel display="flex" alignItems="center" gap={2}>
+              <FormControl maxW="320px">
+                <FormLabel display="flex" alignItems="center" gap={2} minH="32px">
                   {t("scores.labels.event")}
+                  <Box as="span" color="red.400" fontWeight="bold" display="inline-block" lineHeight="1">
+                    *
+                  </Box>
                   <InfoTooltip
                     label={t("scores.help.event.ariaLabel")}
                     content={t("scores.help.event.text")}
@@ -523,9 +531,12 @@ export const ScoresPage = () => {
 
             {mode === "existing" && (
               <Flex gap={4} flexWrap="wrap" align="flex-start">
-                <FormControl isRequired maxW="320px">
-                  <FormLabel display="flex" alignItems="center" gap={2}>
+                <FormControl maxW="320px">
+                  <FormLabel display="flex" alignItems="center" gap={2} minH="32px">
                     {isDoubles ? t("scores.labels.athlete1") : t("scores.labels.athlete")}
+                    <Box as="span" color="red.400" fontWeight="bold" display="inline-block" lineHeight="1">
+                      *
+                    </Box>
                     <InfoTooltip
                       label={t("scores.help.athlete.ariaLabel")}
                       content={isDoubles ? t("scores.help.athlete.doubles") : t("scores.help.athlete.singles")}
@@ -547,9 +558,12 @@ export const ScoresPage = () => {
                   </Select>
                 </FormControl>
                 {isDoubles && (
-                  <FormControl isRequired maxW="320px">
-                    <FormLabel display="flex" alignItems="center" gap={2}>
+                  <FormControl maxW="320px">
+                    <FormLabel display="flex" alignItems="center" gap={2} minH="32px">
                       {t("scores.labels.athlete2")}
+                      <Box as="span" color="red.400" fontWeight="bold" display="inline-block" lineHeight="1">
+                        *
+                      </Box>
                       <InfoTooltip
                         label={t("scores.help.athlete.ariaLabel")}
                         content={t("scores.help.athlete.doubles")}
@@ -694,9 +708,12 @@ export const ScoresPage = () => {
               </Stack>
             )}
 
-            <FormControl isRequired isDisabled={!isFormEnabled}>
-              <FormLabel display="flex" alignItems="center" gap={2}>
+            <FormControl isDisabled={!isFormEnabled}>
+              <FormLabel display="flex" alignItems="center" gap={2} minH="32px">
                 {t("scores.labels.result")}
+                <Box as="span" color="red.400" fontWeight="bold" display="inline-block" lineHeight="1">
+                  *
+                </Box>
                 <InfoTooltip
                   label={t("scores.help.result.ariaLabel")}
                   content={t("scores.help.result.text")}

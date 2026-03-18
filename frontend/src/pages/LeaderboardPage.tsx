@@ -10,7 +10,12 @@ import {
   Heading,
   HStack,
   IconButton,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuList,
   Select,
+  Show,
   Spinner,
   Stack,
   Table,
@@ -237,19 +242,21 @@ export const LeaderboardPage = () => {
     <Box minH="100vh" bg="brand.background" color="brand.text" py={8}>
       <Container maxW="6xl">
         <Flex
-          justify="space-between"
-          align="center"
+          justify={{ base: "flex-start", md: "space-between" }}
+          align={{ base: "flex-start", md: "center" }}
           mb={8}
           className="no-print"
           bg="brand.navbarBg"
           borderRadius="lg"
           px={{ base: 4, md: 6 }}
           py={{ base: 3, md: 4 }}
+          flexDirection={{ base: "column", sm: "row" }}
+          gap={{ base: 3, sm: 0 }}
         >
-          <Heading as="h1" size="2xl" color="brand.navbarTitle">
-            {t("common:appName")}
+          <Heading as="h1" size={{ base: "xl", md: "2xl" }} color="brand.navbarTitle">
+            {competition?.name ?? t("common:appName")}
           </Heading>
-          <HStack spacing={3}>
+          <HStack spacing={2} flexWrap="wrap">
             <IconButton
               aria-label={t("common:colorMode.toggle")}
               icon={colorMode === "dark" ? <SunIcon /> : <MoonIcon />}
@@ -258,12 +265,40 @@ export const LeaderboardPage = () => {
               color="brand.navbarTitle"
               borderColor="whiteAlpha.400"
             />
-            <Button as={RouterLink} to="/login" variant="outline" color="brand.navbarTitle" borderColor="whiteAlpha.400">
-              {t("common:signInAsAdmin")}
-            </Button>
-            <Button as={RouterLink} to="/register" variant="solid" colorScheme="orange" color="white">
-              {t("common:signUp")}
-            </Button>
+            <Show above="md">
+              <Button
+                as={RouterLink}
+                to="/login"
+                variant="outline"
+                color="brand.navbarTitle"
+                borderColor="whiteAlpha.400"
+              >
+                {t("common:signInAsAdmin")}
+              </Button>
+              <Button as={RouterLink} to="/register" variant="solid" colorScheme="orange" color="white">
+                {t("common:signUp")}
+              </Button>
+            </Show>
+            <Show below="md">
+              <Menu>
+                <MenuButton
+                  as={IconButton}
+                  aria-label={t("common:signIn")}
+                  icon={<Box as="span" fontSize="lg">☰</Box>}
+                  variant="outline"
+                  color="brand.navbarTitle"
+                  borderColor="whiteAlpha.400"
+                />
+                <MenuList>
+                  <MenuItem as={RouterLink} to="/login">
+                    {t("common:signInAsAdmin")}
+                  </MenuItem>
+                  <MenuItem as={RouterLink} to="/register" fontWeight="semibold">
+                    {t("common:signUp")}
+                  </MenuItem>
+                </MenuList>
+              </Menu>
+            </Show>
           </HStack>
         </Flex>
 
