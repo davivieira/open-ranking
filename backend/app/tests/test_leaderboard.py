@@ -19,6 +19,7 @@ from app.services.leaderboard import get_leaderboard
 
 def _seed_basic_competition(db: Session) -> tuple[Competition, Phase, Event, Event]:
   user = User(
+    username="owner@example.com",
     email="owner@example.com",
     password_hash="x",
     role=UserRole.ADMIN,

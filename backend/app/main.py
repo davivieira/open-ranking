@@ -78,6 +78,11 @@ def on_startup() -> None:
     run_user_role_viewer_migration()
   except Exception:
     pass
+  try:
+    from .migrate_user_username import run as run_user_username_migration
+    run_user_username_migration()
+  except Exception:
+    pass
 
   # Seed an initial admin user when credentials are provided (idempotent).
   if os.getenv("INITIAL_ADMIN_EMAIL") and os.getenv("INITIAL_ADMIN_PASSWORD"):

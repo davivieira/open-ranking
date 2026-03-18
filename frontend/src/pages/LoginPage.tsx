@@ -22,12 +22,12 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const { login, isLoading, error } = useAuthStore();
   const { t } = useTranslation(["auth", "common"]);
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    await login(email, password);
+    await login(username, password);
     const state = useAuthStore.getState();
     if (state.accessToken) {
       navigate("/admin");
@@ -50,12 +50,13 @@ export const LoginPage = () => {
             )}
             <Box as="form" onSubmit={handleSubmit}>
               <Stack spacing={4}>
-                <FormControl id="email" isRequired>
-                  <FormLabel>{t("login.email", { ns: "auth" })}</FormLabel>
+                <FormControl id="username" isRequired>
+                  <FormLabel>{t("login.username", { ns: "auth" })}</FormLabel>
                   <Input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    type="text"
+                    autoComplete="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     bg="white"
                     color="black"
                   />
@@ -82,7 +83,7 @@ export const LoginPage = () => {
             </Box>
             <Text textAlign="center" fontSize="sm">
               {t("login.newStudio", { ns: "auth" })}{" "}
-              <Link as={RouterLink} to="/register" color="brand.yellow.400">
+              <Link as={RouterLink} to="/register" color="brand.link">
                 {t("login.registerStudio", { ns: "auth" })}
               </Link>
             </Text>

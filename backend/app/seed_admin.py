@@ -26,19 +26,22 @@ def seed_admin() -> None:
     )
     if existing_admin:
       # Always ensure the primary admin matches the configured credentials.
-      existing_admin.email = initial_email
+      existing_admin.username = initial_email
+      if existing_admin.email is None:
+        existing_admin.email = initial_email
       existing_admin.password_hash = hash_password(initial_password)
       db.commit()
       print(f"Updated existing admin user to {initial_email}")
     else:
       user = User(
+        username=initial_email,
         email=initial_email,
         password_hash=hash_password(initial_password),
         role=UserRole.ADMIN,
       )
       db.add(user)
       db.commit()
-      print(f"Seeded initial admin user with email: {initial_email}")
+      print(f"Seeded initial admin user with username: {initial_email}")
   finally:
     db.close()
 

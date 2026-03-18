@@ -4,7 +4,7 @@ import { apiClient } from "../lib/apiClient";
 
 type User = {
   id: number;
-  email: string;
+  username: string;
   role: string;
 };
 
@@ -13,8 +13,8 @@ type AuthState = {
   accessToken: string | null;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+  register: (username: string, password: string) => Promise<void>;
   logout: () => void;
 };
 
@@ -25,13 +25,13 @@ export const useAuthStore = create<AuthState>()(
       accessToken: null,
       isLoading: false,
       error: null,
-      async login(email: string, password: string) {
+      async login(username: string, password: string) {
         set({ isLoading: true, error: null });
         try {
           const result = await apiClient.post<{
             access_token: string;
             user: User;
-          }>("/auth/login", { email, password });
+          }>("/auth/login", { username, password });
 
           set({
             user: result.user,
@@ -44,13 +44,13 @@ export const useAuthStore = create<AuthState>()(
           set({ error: message, isLoading: false });
         }
       },
-      async register(email: string, password: string) {
+      async register(username: string, password: string) {
         set({ isLoading: true, error: null });
         try {
           const result = await apiClient.post<{
             access_token: string;
             user: User;
-          }>("/auth/register", { email, password });
+          }>("/auth/register", { username, password });
 
           set({
             user: result.user,

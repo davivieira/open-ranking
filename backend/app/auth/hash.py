@@ -1,7 +1,10 @@
 from passlib.context import CryptContext
 
-# Use pbkdf2_sha256 to avoid bcrypt backend issues and length limits.
-pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
+# New passwords use Argon2; existing PBKDF2 hashes still verify.
+pwd_context = CryptContext(
+  schemes=["argon2", "pbkdf2_sha256"],
+  deprecated="pbkdf2_sha256",
+)
 
 
 def hash_password(plain_password: str) -> str:
