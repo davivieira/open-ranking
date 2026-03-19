@@ -434,24 +434,24 @@ export const LeaderboardPage = () => {
             {competition ? t("title", { competition: competition.name }) : t("title", { competition: "" })}
           </Heading>
           {pdfLoading && competition && (
-            <Box mb={4} color="brand.subtleText" fontSize="sm">
+            <Box mb={4} color="brand.subtleText" fontSize="sm" fontFamily="Arial, Helvetica, sans-serif">
               <Flex gap={4} flexWrap="wrap">
-                <Box>
-                  <Box as="span" fontWeight="semibold">{t("filters.stage")}:</Box>{" "}
-                  {selectedPhaseName || "—"}
-                </Box>
-                <Box>
-                  <Box as="span" fontWeight="semibold">{t("filters.level")}:</Box>{" "}
-                  {selectedLevelLabel || "—"}
-                </Box>
-                <Box>
-                  <Box as="span" fontWeight="semibold">{t("filters.gender")}:</Box>{" "}
-                  {selectedGenderLabel || "—"}
-                </Box>
-                <Box>
-                  <Box as="span" fontWeight="semibold">{t("filters.eventOptional")}:</Box>{" "}
-                  {selectedEventLabel || "—"}
-                </Box>
+                <Flex as="span" gap={1} align="baseline">
+                  <Box as="span" fontWeight="semibold">{t("filters.stage")}:</Box>
+                  <Box as="span">{selectedPhaseName || "—"}</Box>
+                </Flex>
+                <Flex as="span" gap={1} align="baseline">
+                  <Box as="span" fontWeight="semibold">{t("filters.level")}:</Box>
+                  <Box as="span">{selectedLevelLabel || "—"}</Box>
+                </Flex>
+                <Flex as="span" gap={1} align="baseline">
+                  <Box as="span" fontWeight="semibold">{t("filters.gender")}:</Box>
+                  <Box as="span">{selectedGenderLabel || "—"}</Box>
+                </Flex>
+                <Flex as="span" gap={1} align="baseline">
+                  <Box as="span" fontWeight="semibold">{t("filters.eventOptional")}:</Box>
+                  <Box as="span">{selectedEventLabel || "—"}</Box>
+                </Flex>
               </Flex>
             </Box>
           )}
@@ -550,38 +550,50 @@ export const LeaderboardPage = () => {
                 bg="#1C1130"
                 p={4}
                 boxSizing="border-box"
+                sx={{
+                  "--pdf-title": "#F7D23E",
+                  "--pdf-text": "#F7FAFC",
+                  "--pdf-subtle": "#CBD5E0",
+                  "--pdf-link": "#F7D23E",
+                  "--pdf-thead-bg": "rgba(255,255,255,0.08)",
+                }}
               >
-                <Heading size="md" color="brand.pageTitle" mb={4}>
+                <Heading size="md" color="var(--pdf-title)" mb={4}>
                   {t("title", { competition: competition.name })}
                 </Heading>
-                <Box mb={4} color="brand.subtleText" fontSize="sm">
+                <Box
+                  mb={4}
+                  color="var(--pdf-subtle)"
+                  fontSize="sm"
+                  fontFamily="Arial, Helvetica, sans-serif"
+                >
                   <Flex gap={4} flexWrap="wrap">
-                    <Box>
-                      <Box as="span" fontWeight="semibold">{t("filters.stage")}:</Box>{" "}
-                      {selectedPhaseName || "—"}
-                    </Box>
-                    <Box>
-                      <Box as="span" fontWeight="semibold">{t("filters.level")}:</Box>{" "}
-                      {selectedLevelLabel || "—"}
-                    </Box>
-                    <Box>
-                      <Box as="span" fontWeight="semibold">{t("filters.gender")}:</Box>{" "}
-                      {selectedGenderLabel || "—"}
-                    </Box>
-                    <Box>
-                      <Box as="span" fontWeight="semibold">{t("filters.eventOptional")}:</Box>{" "}
-                      {selectedEventLabel || "—"}
-                    </Box>
+                    <Flex as="span" gap={1} align="baseline">
+                      <Box as="span" fontWeight="semibold">{t("filters.stage")}:</Box>
+                      <Box as="span">{selectedPhaseName || "—"}</Box>
+                    </Flex>
+                    <Flex as="span" gap={1} align="baseline">
+                      <Box as="span" fontWeight="semibold">{t("filters.level")}:</Box>
+                      <Box as="span">{selectedLevelLabel || "—"}</Box>
+                    </Flex>
+                    <Flex as="span" gap={1} align="baseline">
+                      <Box as="span" fontWeight="semibold">{t("filters.gender")}:</Box>
+                      <Box as="span">{selectedGenderLabel || "—"}</Box>
+                    </Flex>
+                    <Flex as="span" gap={1} align="baseline">
+                      <Box as="span" fontWeight="semibold">{t("filters.eventOptional")}:</Box>
+                      <Box as="span">{selectedEventLabel || "—"}</Box>
+                    </Flex>
                   </Flex>
                 </Box>
                 <Table variant="simple" size="md">
-                  <Thead bg="whiteAlpha.100">
+                  <Thead bg="var(--pdf-thead-bg)">
                     <Tr>
-                      <Th color="brand.text">{t("table.rank")}</Th>
-                      <Th color="brand.text">{t("table.athletes")}</Th>
-                      {showResultColumn && <Th color="brand.text">{t("table.result")}</Th>}
-                      <Th isNumeric color="brand.text">{t("table.totalPoints")}</Th>
-                      <Th isNumeric color="brand.text">{t("table.events")}</Th>
+                      <Th color="var(--pdf-text)">{t("table.rank")}</Th>
+                      <Th color="var(--pdf-text)">{t("table.athletes")}</Th>
+                      {showResultColumn && <Th color="var(--pdf-text)">{t("table.result")}</Th>}
+                      <Th isNumeric color="var(--pdf-text)">{t("table.totalPoints")}</Th>
+                      <Th isNumeric color="var(--pdf-text)">{t("table.events")}</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -589,11 +601,11 @@ export const LeaderboardPage = () => {
                       .slice(pageIndex * 10, pageIndex * 10 + 10)
                       .map((row, idx) => (
                         <Tr key={`${pageIndex}-${idx}-${row.athlete?.id ?? `${row.athlete_pair?.athlete1.id}-${row.athlete_pair?.athlete2.id}`}`}>
-                          <Td color="brand.text">{row.rank}</Td>
-                          <Td color="brand.text">
+                          <Td color="var(--pdf-text)">{row.rank}</Td>
+                          <Td color="var(--pdf-text)">
                             {row.athlete ? (
                               <>
-                                <Box as="span" color="brand.link">
+                                <Box as="span" color="var(--pdf-link)">
                                   {row.athlete.name.split(/\s+/).filter(Boolean).map((part, i) => (
                                     <Fragment key={i}>
                                       {i > 0 ? <Box as="span" mx={1.5} /> : null}
@@ -607,7 +619,7 @@ export const LeaderboardPage = () => {
                               </>
                             ) : row.athlete_pair ? (
                               <Flex gap={2} flexWrap="wrap">
-                                <Box as="span" color="brand.link">
+                                <Box as="span" color="var(--pdf-link)">
                                   {row.athlete_pair.athlete1.name.split(/\s+/).filter(Boolean).map((part, i) => (
                                     <Fragment key={i}>
                                       {i > 0 ? <Box as="span" mx={1.5} /> : null}
@@ -615,8 +627,8 @@ export const LeaderboardPage = () => {
                                     </Fragment>
                                   ))}
                                 </Box>
-                                <Box as="span">/</Box>
-                                <Box as="span" color="brand.link">
+                                <Box as="span" color="var(--pdf-text)">/</Box>
+                                <Box as="span" color="var(--pdf-link)">
                                   {row.athlete_pair.athlete2.name.split(/\s+/).filter(Boolean).map((part, i) => (
                                     <Fragment key={i}>
                                       {i > 0 ? <Box as="span" mx={1.5} /> : null}
@@ -632,9 +644,9 @@ export const LeaderboardPage = () => {
                               "—"
                             )}
                           </Td>
-                          {showResultColumn && <Td color="brand.text">{row.event_result ?? "—"}</Td>}
-                          <Td isNumeric color="brand.text">{row.total_points}</Td>
-                          <Td isNumeric color="brand.text">{row.event_count}</Td>
+                          {showResultColumn && <Td color="var(--pdf-text)">{row.event_result ?? "—"}</Td>}
+                          <Td isNumeric color="var(--pdf-text)">{row.total_points}</Td>
+                          <Td isNumeric color="var(--pdf-text)">{row.event_count}</Td>
                         </Tr>
                       ))}
                   </Tbody>
