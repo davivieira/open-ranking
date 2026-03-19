@@ -83,6 +83,11 @@ def on_startup() -> None:
     run_user_username_migration()
   except Exception:
     pass
+  try:
+    from .migrate_weight_kg import run as run_weight_kg_migration
+    run_weight_kg_migration()
+  except Exception:
+    pass
 
   # Seed an initial admin user when credentials are provided (idempotent).
   if os.getenv("INITIAL_ADMIN_EMAIL") and os.getenv("INITIAL_ADMIN_PASSWORD"):

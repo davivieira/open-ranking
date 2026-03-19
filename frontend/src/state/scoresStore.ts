@@ -24,6 +24,7 @@ export type Score = {
   level: string;
   time_seconds: number | null;
   reps_points: number | null;
+  weight_kg?: number | null;
   rank_within_level: number | null;
   points_awarded: number | null;
 };
@@ -38,6 +39,11 @@ type ScoresState = {
   error: string | null;
   fetchScores: (eventId: number, level?: string) => Promise<void>;
   addScore: (payload: unknown) => Promise<AddScoreResult>;
+  updateScore: (
+    scoreId: number,
+    eventId: number,
+    body: { time_seconds: number } | { reps_points: number } | { weight_kg: number },
+  ) => Promise<boolean>;
   deleteScore: (scoreId: number, eventId: number) => Promise<boolean>;
 };
 
@@ -76,6 +82,23 @@ export const useScoresStore = create<ScoresState>((set, get) => ({
       const message = err instanceof Error ? err.message : "Failed to add score";
       set({ error: message, isLoading: false });
       return { ok: false };
+    }
+  },
+  async updateScore(
+    scoreId: number,
+    eventId: number,
+    body: { time_seconds: number } | { reps_points: number } | { weight_kg: number },
+  ): Promise<boolean> {
+    const { accessToken } = useAuthStore.getState();
+    set({ isLoading: true, error: null });
+    try {
+      await apiClient.patch<Score>(`/scores/${scoreId}`, body, { token: accessToken });
+      await get().fetchScores(eventId);
+      return true;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update score";
+      set({ error: message, isLoading: false });
+      return false;
     }
   },
   async deleteScore(scoreId: number, eventId: number): Promise<boolean> {

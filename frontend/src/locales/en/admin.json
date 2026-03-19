@@ -54,7 +54,8 @@
       "athlete2": "Athlete 2 (partner)",
       "result": "Result",
       "time": "Time (e.g. 5:32 or 1:05:30)",
-      "points": "Points / reps"
+      "points": "Points / reps",
+      "weightKg": "Weight (kg)"
     },
     "placeholders": {
       "selectCompetition": "Select competition",
@@ -78,7 +79,7 @@
       },
       "result": {
         "ariaLabel": "More info about results",
-        "text": "Enter the result for the athlete/pair. Use time if finished, or points if they didn’t finish."
+        "text": "Enter the result for the athlete/pair: time if they finished the workout, points/reps if they didn’t finish, or load (kg) for a max-weight style event."
       },
       "resultsTutorial": {
         "ariaLabel": "How to add results",
@@ -87,7 +88,8 @@
     },
     "resultOptions": {
       "finishedTime": "Finished (time)",
-      "didntFinishPoints": "Didn’t finish (points)"
+      "didntFinishPoints": "Didn’t finish (points)",
+      "weightLoad": "Weight (load)"
     },
     "info": {
       "eventFinished": "This event is finished; no more scores can be added."
@@ -96,11 +98,13 @@
       "duplicateSingles": "This athlete already has a score for this event.",
       "duplicatePair": "This pair already has a score for this event.",
       "athleteAlreadyInDoubles": "One of these athletes is already participating in another doubles pair for this event.",
-      "duplicateGeneric": "This score already exists."
+      "duplicateGeneric": "This score already exists.",
+      "eventFinishedModify": "This event is finished; scores cannot be modified."
     },
     "actions": {
       "saveScore": "Save score",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "editResult": "Edit result"
     },
     "table": {
       "title": "Event scores",
@@ -113,13 +117,17 @@
         "actions": "Actions"
       },
       "values": {
-        "pointsSuffix": "{{points}} pts"
+        "pointsSuffix": "{{points}} pts",
+        "weightSuffix": "{{weight}} kg"
       },
       "empty": "No scores yet for this event."
     },
     "deleteDialog": {
       "title": "Delete score",
       "bodyPrefix": "Are you sure you want to delete the score for"
+    },
+    "editDialog": {
+      "title": "Edit result"
     }
   },
   "common": {

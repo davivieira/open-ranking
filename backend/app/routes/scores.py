@@ -7,12 +7,13 @@ from ..audit import audit_log
 from ..auth.deps import get_current_admin, get_current_admin_or_viewer
 from ..auth.ownership import require_event_owner
 from ..database import get_db
-from ..models import Athlete, Event, EventType, Level, Score, User
+from ..models import Athlete, EventType, Level, Score, User
 from ..schemas.scores import (
   AthleteForScoreCreate,
   ScoreCreateExistingAthlete,
   ScoreCreateWithNewAthlete,
   ScoreRead,
+  ScoreUpdate,
 )
 from ..services.scoring import (
   create_score_for_existing_athlete,
@@ -30,6 +31,7 @@ class ScoreCreate(BaseModel):
   event_id: int
   time_seconds: float | None = None
   reps_points: float | None = None
+  weight_kg: float | None = None
   level: Level | None = None  # derived from athlete when not provided
   athlete_id: int | None = None
   athlete: AthleteForScoreCreate | None = None
@@ -62,10 +64,14 @@ def create_score(
       status_code=status.HTTP_400_BAD_REQUEST,
       detail="Either athlete_id or athlete payload must be provided",
     )
-  if (payload.time_seconds is None) == (payload.reps_points is None):
+  result_fields = (payload.time_seconds, payload.reps_points, payload.weight_kg)
+  if sum(1 for x in result_fields if x is not None) != 1:
     raise HTTPException(
       status_code=status.HTTP_400_BAD_REQUEST,
-      detail="Provide exactly one of time_seconds (athlete finished) or reps_points (time cap)",
+      detail=(
+        "Provide exactly one of time_seconds (finished with time), "
+        "reps_points (reps / did not finish), or weight_kg (load)"
+      ),
     )
 
   # Derive level from athlete when not provided
@@ -102,6 +108,7 @@ def create_score(
         level=level,
         time_seconds=payload.time_seconds,
         reps_points=payload.reps_points,
+        weight_kg=payload.weight_kg,
       )
     else:
       score = create_score_with_new_athlete(
@@ -117,6 +124,7 @@ def create_score(
         history_entries=payload.athlete.history_entries or [],
         time_seconds=payload.time_seconds,
         reps_points=payload.reps_points,
+        weight_kg=payload.weight_kg,
         partner_id=payload.partner_id,
         partner=payload.partner,
       )
@@ -149,9 +157,50 @@ def list_event_scores(
     case((Score.time_seconds.isnot(None), 0), else_=1),
     Score.time_seconds.asc().nullslast(),
     Score.reps_points.desc().nullslast(),
+    Score.weight_kg.desc().nullslast(),
   )
   scores = list(db.scalars(stmt))
   return scores
+
+
+@router.patch("/{score_id}", response_model=ScoreRead)
+def update_score(
+  score_id: int,
+  payload: ScoreUpdate,
+  db: Session = Depends(get_db),
+  current_user: User = Depends(get_current_admin),
+) -> Score:
+  score = db.get(Score, score_id)
+  if score is None:
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Score not found")
+  event = require_event_owner(db, score.event_id, current_user.id)
+  if event.is_finished:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Event is finished; scores cannot be modified",
+    )
+  if payload.time_seconds is not None:
+    score.time_seconds = payload.time_seconds
+    score.reps_points = None
+    score.weight_kg = None
+  elif payload.reps_points is not None:
+    score.reps_points = payload.reps_points
+    score.time_seconds = None
+    score.weight_kg = None
+  else:
+    score.weight_kg = payload.weight_kg
+    score.time_seconds = None
+    score.reps_points = None
+  audit_log(db, current_user.id, "score.update", "score", score_id)
+  db.commit()
+  recalculate_event_ranking(db, competition_id=score.competition_id, event_id=score.event_id)
+  stmt = (
+    select(Score)
+    .where(Score.id == score_id)
+    .options(joinedload(Score.athlete), joinedload(Score.partner))
+  )
+  updated = db.scalars(stmt).one()
+  return updated
 
 
 @router.delete("/{score_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -163,7 +212,12 @@ def delete_score(
   score = db.get(Score, score_id)
   if score is None:
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Score not found")
-  require_event_owner(db, score.event_id, current_user.id)
+  event = require_event_owner(db, score.event_id, current_user.id)
+  if event.is_finished:
+    raise HTTPException(
+      status_code=status.HTTP_400_BAD_REQUEST,
+      detail="Event is finished; scores cannot be modified",
+    )
   competition_id = score.competition_id
   event_id = score.event_id
   db.delete(score)

@@ -21,13 +21,20 @@ class ScoreBase(BaseModel):
   event_id: int
   time_seconds: Optional[float] = Field(None, ge=0)
   reps_points: Optional[float] = Field(None, ge=0)
+  weight_kg: Optional[float] = Field(None, ge=0)
 
   @model_validator(mode="after")
-  def time_or_points(self):
-    has_time = self.time_seconds is not None
-    has_points = self.reps_points is not None
-    if has_time == has_points:
-      raise ValueError("Provide exactly one of time_seconds (athlete finished) or reps_points (time cap)")
+  def exactly_one_result_type(self):
+    n = sum(
+      1
+      for v in (self.time_seconds, self.reps_points, self.weight_kg)
+      if v is not None
+    )
+    if n != 1:
+      raise ValueError(
+        "Provide exactly one of time_seconds (finished with time), "
+        "reps_points (did not finish / reps), or weight_kg (load)"
+      )
     return self
 
 
@@ -37,6 +44,28 @@ class ScoreCreateExistingAthlete(ScoreBase):
 
 class ScoreCreateWithNewAthlete(ScoreBase):
   athlete: AthleteForScoreCreate
+
+
+class ScoreUpdate(BaseModel):
+  """Exactly one of time_seconds, reps_points, or weight_kg (same semantics as create)."""
+
+  time_seconds: Optional[float] = Field(None, ge=0)
+  reps_points: Optional[float] = Field(None, ge=0)
+  weight_kg: Optional[float] = Field(None, ge=0)
+
+  @model_validator(mode="after")
+  def exactly_one_result_type(self):
+    n = sum(
+      1
+      for v in (self.time_seconds, self.reps_points, self.weight_kg)
+      if v is not None
+    )
+    if n != 1:
+      raise ValueError(
+        "Provide exactly one of time_seconds (finished with time), "
+        "reps_points (did not finish / reps), or weight_kg (load)"
+      )
+    return self
 
 
 class AthleteSummary(BaseModel):
@@ -60,6 +89,7 @@ class ScoreRead(BaseModel):
   level: Level
   time_seconds: Optional[float] = None
   reps_points: Optional[float] = None
+  weight_kg: Optional[float] = None
   rank_within_level: Optional[int]
   points_awarded: Optional[int]
   created_at: datetime

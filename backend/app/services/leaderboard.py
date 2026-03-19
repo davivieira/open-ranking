@@ -40,6 +40,8 @@ def _format_score_result(score: Score) -> str | None:
     return base
   if score.reps_points is not None:
     return str(score.reps_points)
+  if score.weight_kg is not None:
+    return f"{score.weight_kg:g} kg"
   return None
 
 

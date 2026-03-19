@@ -40,16 +40,25 @@ def _validate_event_relationships(
   return event
 
 
+def _non_time_metric(score: Score) -> float:
+  """Reps/points and weight (kg) share the same ranking tier: higher is better."""
+  if score.reps_points is not None:
+    return score.reps_points
+  if score.weight_kg is not None:
+    return score.weight_kg
+  return 0.0
+
+
 def _score_sort_key(score: Score) -> tuple:
-  """Finishers (time) first, lower time better; then non-finishers, higher points better."""
+  """Finishers (time) first, lower time better; then reps or weight, higher better."""
   if score.time_seconds is not None:
     return (0, score.time_seconds)
-  return (1, -(score.reps_points or 0))
+  return (1, -_non_time_metric(score))
 
 
 def compute_ranking_for_level(level_scores: list[Score]) -> list[tuple[int, int, int]]:
   """
-  Sort by: finishers (time ascending) first, then non-finishers (reps_points descending).
+  Sort by: finishers (time ascending) first, then non-finishers (reps or weight, descending).
   Return list of (score_id, rank, points).
   """
   sorted_scores = sorted(level_scores, key=_score_sort_key)
@@ -67,6 +76,9 @@ def compute_ranking_for_level(level_scores: list[Score]) -> list[tuple[int, int,
           break
       elif s0.reps_points is not None and sj.reps_points is not None:
         if sj.reps_points != s0.reps_points:
+          break
+      elif s0.weight_kg is not None and sj.weight_kg is not None:
+        if sj.weight_kg != s0.weight_kg:
           break
       else:
         break
@@ -89,7 +101,7 @@ def recalculate_event_ranking(db: Session, competition_id: int, event_id: int) -
 
   by_level: dict[Level, list[Score]] = defaultdict(list)
   for score in scores:
-    if score.time_seconds is not None or score.reps_points is not None:
+    if score.time_seconds is not None or score.reps_points is not None or score.weight_kg is not None:
       by_level[score.level].append(score)
 
   for level, level_scores in by_level.items():
@@ -185,6 +197,7 @@ def create_score_for_existing_athlete(
   level: Level,
   time_seconds: float | None = None,
   reps_points: float | None = None,
+  weight_kg: float | None = None,
 ) -> Score:
   from ..schemas.scores import AthleteForScoreCreate
 
@@ -249,6 +262,7 @@ def create_score_for_existing_athlete(
     level=level,
     time_seconds=time_seconds,
     reps_points=reps_points,
+    weight_kg=weight_kg,
   )
   db.add(score)
   db.commit()
@@ -274,6 +288,7 @@ def create_score_with_new_athlete(
   history_entries: list[str] | None,
   time_seconds: float | None = None,
   reps_points: float | None = None,
+  weight_kg: float | None = None,
   partner_id: int | None = None,
   partner: "AthleteForScoreCreate | None" = None,
 ) -> Score:
@@ -358,6 +373,7 @@ def create_score_with_new_athlete(
     level=level,
     time_seconds=time_seconds,
     reps_points=reps_points,
+    weight_kg=weight_kg,
   )
   db.add(score)
   db.commit()

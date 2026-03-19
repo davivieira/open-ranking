@@ -54,7 +54,8 @@
       "athlete2": "Atleta 2 (par)",
       "result": "Resultado",
       "time": "Tempo (ex.: 5:32 ou 1:05:30)",
-      "points": "Pontos / repetições"
+      "points": "Pontos / repetições",
+      "weightKg": "Carga (kg)"
     },
     "placeholders": {
       "selectCompetition": "Selecione a competição",
@@ -78,7 +79,7 @@
       },
       "result": {
         "ariaLabel": "Mais informações sobre o resultado",
-        "text": "Informe o resultado do atleta/par. Use tempo se finalizou o evento, ou pontos se não finalizou."
+        "text": "Informe o resultado do atleta/par: tempo se finalizou o treino, pontos/repetições se não finalizou, ou carga (kg) em eventos de peso máximo."
       },
       "resultsTutorial": {
         "ariaLabel": "Como adicionar resultados",
@@ -87,7 +88,8 @@
     },
     "resultOptions": {
       "finishedTime": "Finalizou (tempo)",
-      "didntFinishPoints": "Não finalizou (pontos)"
+      "didntFinishPoints": "Não finalizou (pontos)",
+      "weightLoad": "Carga (kg)"
     },
     "info": {
       "eventFinished": "Este evento foi finalizado; não é possível adicionar mais resultados."
@@ -96,11 +98,13 @@
       "duplicateSingles": "Este atleta já tem um resultado cadastrado para este evento.",
       "duplicatePair": "Esta dupla já tem um resultado cadastrado para este evento.",
       "athleteAlreadyInDoubles": "Um destes atletas já está participando de outra dupla neste evento.",
-      "duplicateGeneric": "Este resultado já existe."
+      "duplicateGeneric": "Este resultado já existe.",
+      "eventFinishedModify": "Este evento foi finalizado; não é possível alterar resultados."
     },
     "actions": {
       "saveScore": "Salvar resultado",
-      "saving": "Salvando..."
+      "saving": "Salvando...",
+      "editResult": "Editar resultado"
     },
     "table": {
       "title": "Resultados do evento",
@@ -113,13 +117,17 @@
         "actions": "Ações"
       },
       "values": {
-        "pointsSuffix": "{{points}} pts"
+        "pointsSuffix": "{{points}} pts",
+        "weightSuffix": "{{weight}} kg"
       },
       "empty": "Ainda não há resultados para este evento."
     },
     "deleteDialog": {
       "title": "Excluir resultado",
       "bodyPrefix": "Tem certeza que deseja excluir o resultado de"
+    },
+    "editDialog": {
+      "title": "Editar resultado"
     }
   },
   "common": {

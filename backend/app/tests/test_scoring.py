@@ -2,7 +2,12 @@ from app.models import Score
 from app.services.scoring import compute_ranking_for_level
 
 
-def _make_score(score_id: int, time_seconds: float | None, reps_points: float | None) -> Score:
+def _make_score(
+  score_id: int,
+  time_seconds: float | None,
+  reps_points: float | None,
+  weight_kg: float | None = None,
+) -> Score:
   s = Score(
     athlete_id=1,
     competition_id=1,
@@ -13,6 +18,7 @@ def _make_score(score_id: int, time_seconds: float | None, reps_points: float | 
   s.id = score_id
   s.time_seconds = time_seconds
   s.reps_points = reps_points
+  s.weight_kg = weight_kg
   return s
 
 
@@ -55,4 +61,19 @@ def test_compute_ranking_for_level_ties_share_rank_and_points():
   assert id3 == 3
   assert rank3 > rank1
   assert pts3 < pts1
+
+
+def test_compute_ranking_for_level_weight_ranked_like_reps():
+  s1 = _make_score(1, time_seconds=60.0, reps_points=None, weight_kg=None)
+  s2 = _make_score(2, time_seconds=None, reps_points=None, weight_kg=120.0)
+  s3 = _make_score(3, time_seconds=None, reps_points=None, weight_kg=100.0)
+
+  ranking = sorted(compute_ranking_for_level([s3, s2, s1]), key=lambda x: x[0])
+
+  assert ranking[0][0] == 1
+  assert ranking[1][0] == 2
+  assert ranking[2][0] == 3
+  assert ranking[0][2] == 100
+  assert ranking[1][2] == 97
+  assert ranking[2][2] == 94
 

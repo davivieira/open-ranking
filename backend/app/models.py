@@ -200,6 +200,7 @@ class Score(Base, TimestampMixin):
   level: Mapped[Level] = mapped_column(Enum(Level), nullable=False)
   time_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
   reps_points: Mapped[float | None] = mapped_column(Float, nullable=True)
+  weight_kg: Mapped[float | None] = mapped_column(Float, nullable=True)
   rank_within_level: Mapped[int | None] = mapped_column(Integer)
   points_awarded: Mapped[int | None] = mapped_column(Integer)
 

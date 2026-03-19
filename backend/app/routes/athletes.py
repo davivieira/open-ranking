@@ -167,6 +167,8 @@ def get_athlete_history(
       return base
     if score.reps_points is not None:
       return str(score.reps_points)
+    if score.weight_kg is not None:
+      return f"{score.weight_kg:g} kg"
     return None
 
   # Cache winners per (event_id, level) to avoid repeated queries.

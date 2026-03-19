@@ -10,6 +10,7 @@ import {
   CardBody,
   Flex,
   FormControl,
+  HStack,
   FormLabel,
   Heading,
   Input,
@@ -39,7 +40,7 @@ import { InfoTooltip } from "../../components/InfoTooltip";
 import { MobileToggleGroup } from "../../components/MobileToggleGroup";
 import { handleApiError } from "../../lib/handleApiError";
 import { useAuthStore } from "../../state/authStore";
-import { useScoresStore } from "../../state/scoresStore";
+import { useScoresStore, type Score } from "../../state/scoresStore";
 
 type Competition = { id: number; name: string; slug: string; type: string };
 type Phase = { id: number; competition_id: number; code: string; name: string; order_index: number };
@@ -84,22 +85,25 @@ export const ScoresPage = () => {
   const [partnerLevel, setPartnerLevel] = useState("RX");
   const [partnerDoublesLevel, setPartnerDoublesLevel] = useState("DOUBLE_RX");
   const [partnerBirthDate, setPartnerBirthDate] = useState("");
-  const [scoreType, setScoreType] = useState<"time" | "points">("time");
+  const [scoreType, setScoreType] = useState<"time" | "points" | "weight">("time");
   const [timeInput, setTimeInput] = useState("");
   const [pointsInput, setPointsInput] = useState("");
+  const [weightInput, setWeightInput] = useState("");
 
   const deleteDisclosure = useDisclosure();
   const cancelDeleteRef = useRef<HTMLButtonElement>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: number; label: string } | null>(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
   const mobileScoreActionsDisclosure = useDisclosure();
-  const [mobileScoreActionsTarget, setMobileScoreActionsTarget] = useState<{
-    id: number;
-    athlete: { name: string };
-    partner?: { name: string } | null;
-  } | null>(null);
+  const [mobileScoreActionsTarget, setMobileScoreActionsTarget] = useState<Score | null>(null);
+  const editDisclosure = useDisclosure();
+  const [editTarget, setEditTarget] = useState<Score | null>(null);
+  const [editScoreType, setEditScoreType] = useState<"time" | "points" | "weight">("time");
+  const [editTimeInput, setEditTimeInput] = useState("");
+  const [editPointsInput, setEditPointsInput] = useState("");
+  const [editWeightInput, setEditWeightInput] = useState("");
 
-  const { scores, isLoading, error, fetchScores, addScore, deleteScore } = useScoresStore();
+  const { scores, isLoading, error, fetchScores, addScore, updateScore, deleteScore } = useScoresStore();
   const opts = { token: accessToken };
   const lastToastRef = useRef<{ status: "error" | "success" | "info"; message: string } | null>(null);
 
@@ -113,6 +117,9 @@ export const ScoresPage = () => {
     }
     if (msg === "An athlete in this pair already has a doubles score for this event and level") {
       return t("scores.errors.athleteAlreadyInDoubles");
+    }
+    if (msg === "Event is finished; scores cannot be modified") {
+      return t("scores.errors.eventFinishedModify");
     }
 
     // DB-level unique constraint fallback (e.g., Postgres duplicate key message).
@@ -192,7 +199,9 @@ export const ScoresPage = () => {
   const phaseId = selectedEvent?.phase_id ?? null;
   const isDoubles = selectedEvent?.event_type === "DOUBLES";
   const hasCompetitionAndEvent = competitionId !== "" && eventId !== "";
-  const isFormEnabled = hasCompetitionAndEvent && selectedEvent?.is_finished !== true;
+  const eventFinished = selectedEvent?.is_finished === true;
+  const isFormEnabled = hasCompetitionAndEvent && !eventFinished;
+  const actionsDisabled = isViewer || eventFinished;
 
   const athletes = selectedEvent?.gender_category === "MIXED"
     ? allAthletes
@@ -271,6 +280,7 @@ export const ScoresPage = () => {
     setScoreType("time");
     setTimeInput("");
     setPointsInput("");
+    setWeightInput("");
   };
 
   const parseTimeToSeconds = (s: string): number | null => {
@@ -305,15 +315,25 @@ export const ScoresPage = () => {
     return `${m}:${String(s).padStart(2, "0")}${msStr}`;
   };
 
+  const formatScoreCell = (score: Score) => {
+    if (score.time_seconds != null) return formatSeconds(score.time_seconds);
+    if (score.reps_points != null) return t("scores.table.values.pointsSuffix", { points: score.reps_points });
+    if (score.weight_kg != null) return t("scores.table.values.weightSuffix", { weight: score.weight_kg });
+    return t("common.emptyDash");
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (competitionId === "" || eventId === "") return;
     if (scoreType === "time") {
       const sec = parseTimeToSeconds(timeInput);
       if (sec === null || sec < 0) return;
-    } else {
+    } else if (scoreType === "points") {
       const pts = parseFloat(pointsInput);
       if (!Number.isFinite(pts) || pts < 0) return;
+    } else {
+      const kg = parseFloat(weightInput);
+      if (!Number.isFinite(kg) || kg < 0) return;
     }
 
     const basePayload: Record<string, unknown> = {
@@ -322,8 +342,10 @@ export const ScoresPage = () => {
     };
     if (scoreType === "time") {
       basePayload.time_seconds = parseTimeToSeconds(timeInput);
-    } else {
+    } else if (scoreType === "points") {
       basePayload.reps_points = parseFloat(pointsInput);
+    } else {
+      basePayload.weight_kg = parseFloat(weightInput);
     }
     if (phaseId != null) basePayload.phase_id = phaseId;
 
@@ -388,6 +410,52 @@ export const ScoresPage = () => {
         }
       }
       clearForm();
+    }
+  };
+
+  const closeEditModal = () => {
+    editDisclosure.onClose();
+    setEditTarget(null);
+  };
+
+  const openEditScore = (score: Score) => {
+    setEditTarget(score);
+    if (score.time_seconds != null) {
+      setEditScoreType("time");
+      setEditTimeInput(formatSeconds(score.time_seconds));
+      setEditPointsInput("");
+      setEditWeightInput("");
+    } else if (score.reps_points != null) {
+      setEditScoreType("points");
+      setEditTimeInput("");
+      setEditPointsInput(String(score.reps_points));
+      setEditWeightInput("");
+    } else {
+      setEditScoreType("weight");
+      setEditTimeInput("");
+      setEditPointsInput("");
+      setEditWeightInput(score.weight_kg != null ? String(score.weight_kg) : "");
+    }
+    editDisclosure.onOpen();
+  };
+
+  const handleEditSave = async () => {
+    if (!editTarget || eventId === "") return;
+    if (editScoreType === "time") {
+      const sec = parseTimeToSeconds(editTimeInput);
+      if (sec === null || sec < 0) return;
+      const ok = await updateScore(editTarget.id, eventId as number, { time_seconds: sec });
+      if (ok) closeEditModal();
+    } else if (editScoreType === "points") {
+      const pts = parseFloat(editPointsInput);
+      if (!Number.isFinite(pts) || pts < 0) return;
+      const ok = await updateScore(editTarget.id, eventId as number, { reps_points: pts });
+      if (ok) closeEditModal();
+    } else {
+      const kg = parseFloat(editWeightInput);
+      if (!Number.isFinite(kg) || kg < 0) return;
+      const ok = await updateScore(editTarget.id, eventId as number, { weight_kg: kg });
+      if (ok) closeEditModal();
     }
   };
 
@@ -728,6 +796,7 @@ export const ScoresPage = () => {
                   options={[
                     { value: "time", label: t("scores.resultOptions.finishedTime") },
                     { value: "points", label: t("scores.resultOptions.didntFinishPoints") },
+                    { value: "weight", label: t("scores.resultOptions.weightLoad") },
                   ]}
                 />
               </Box>
@@ -743,7 +812,7 @@ export const ScoresPage = () => {
                     isDisabled={!isFormEnabled}
                   />
                 </FormControl>
-              ) : (
+              ) : scoreType === "points" ? (
                 <FormControl isRequired>
                   <FormLabel>{t("scores.labels.points")}</FormLabel>
                   <Input
@@ -751,6 +820,20 @@ export const ScoresPage = () => {
                     min={0}
                     value={pointsInput}
                     onChange={(e) => setPointsInput(e.target.value)}
+                    bg="white"
+                    color="black"
+                    isDisabled={!isFormEnabled}
+                  />
+                </FormControl>
+              ) : (
+                <FormControl isRequired>
+                  <FormLabel>{t("scores.labels.weightKg")}</FormLabel>
+                  <Input
+                    type="number"
+                    min={0}
+                    step="any"
+                    value={weightInput}
+                    onChange={(e) => setWeightInput(e.target.value)}
                     bg="white"
                     color="black"
                     isDisabled={!isFormEnabled}
@@ -766,10 +849,14 @@ export const ScoresPage = () => {
               loadingText={t("scores.actions.saving")}
               alignSelf="flex-start"
               isDisabled={
-                selectedEvent?.is_finished === true ||
+                eventFinished ||
                 competitionId === "" ||
                 eventId === "" ||
-                (scoreType === "time" ? parseTimeToSeconds(timeInput) == null : !pointsInput.trim() || !Number.isFinite(parseFloat(pointsInput))) ||
+                (scoreType === "time"
+                  ? parseTimeToSeconds(timeInput) == null
+                  : scoreType === "points"
+                    ? !pointsInput.trim() || !Number.isFinite(parseFloat(pointsInput))
+                    : !weightInput.trim() || !Number.isFinite(parseFloat(weightInput))) ||
                 (mode === "existing" && (!athleteId || (isDoubles && !partnerId))) ||
                 ((mode === "new" || mode === "new-athlete-existing-partner") && !athleteName) ||
                 (mode === "new-athlete-existing-partner" && !partnerId) ||
@@ -808,24 +895,30 @@ export const ScoresPage = () => {
                     {score.partner ? ` / ${score.partner.name}` : ""}
                   </Td>
                   <Td>{score.level}</Td>
-                  <Td>
-                    {score.time_seconds != null
-                      ? formatSeconds(score.time_seconds)
-                      : score.reps_points != null
-                        ? t("scores.table.values.pointsSuffix", { points: score.reps_points })
-                        : t("common.emptyDash")}
-                  </Td>
+                  <Td>{formatScoreCell(score)}</Td>
                   <Td isNumeric>{score.points_awarded ?? "-"}</Td>
                   <Td>
                     {!isViewer && (
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        variant="outline"
-                        onClick={() => openDelete(score)}
-                      >
-                        {t("common.actions.delete")}
-                      </Button>
+                      <HStack spacing={2}>
+                        <Button
+                          size="sm"
+                          colorScheme="blue"
+                          variant="outline"
+                          onClick={() => openEditScore(score)}
+                          isDisabled={actionsDisabled}
+                        >
+                          {t("scores.actions.editResult")}
+                        </Button>
+                        <Button
+                          size="sm"
+                          colorScheme="red"
+                          variant="outline"
+                          onClick={() => openDelete(score)}
+                          isDisabled={actionsDisabled}
+                        >
+                          {t("common.actions.delete")}
+                        </Button>
+                      </HStack>
                     )}
                   </Td>
                 </Tr>
@@ -845,9 +938,9 @@ export const ScoresPage = () => {
               {scores.map((score) => (
                 <Tr
                   key={score.id}
-                  cursor={!isViewer ? "pointer" : "default"}
+                  cursor={!actionsDisabled ? "pointer" : "default"}
                   onClick={() => {
-                    if (isViewer) return;
+                    if (actionsDisabled) return;
                     setMobileScoreActionsTarget(score);
                     mobileScoreActionsDisclosure.onOpen();
                   }}
@@ -856,13 +949,7 @@ export const ScoresPage = () => {
                     {score.athlete.name}
                     {score.partner ? ` / ${score.partner.name}` : ""}
                   </Td>
-                  <Td>
-                    {score.time_seconds != null
-                      ? formatSeconds(score.time_seconds)
-                      : score.reps_points != null
-                        ? t("scores.table.values.pointsSuffix", { points: score.reps_points })
-                        : t("common.emptyDash")}
-                  </Td>
+                  <Td>{formatScoreCell(score)}</Td>
                 </Tr>
               ))}
             </Tbody>
@@ -892,17 +979,130 @@ export const ScoresPage = () => {
           <ModalBody>{t("scores.table.columns.actions")}</ModalBody>
           <ModalFooter>
             {!isViewer && mobileScoreActionsTarget && (
-              <Button
-                colorScheme="red"
-                variant="outline"
-                onClick={() => {
-                  mobileScoreActionsDisclosure.onClose();
-                  openDelete(mobileScoreActionsTarget);
-                }}
-              >
-                {t("common.actions.delete")}
-              </Button>
+              <HStack spacing={3} w="full" justify="flex-end">
+                <Button
+                  colorScheme="blue"
+                  variant="outline"
+                  isDisabled={actionsDisabled}
+                  onClick={() => {
+                    const target = mobileScoreActionsTarget;
+                    mobileScoreActionsDisclosure.onClose();
+                    if (target) openEditScore(target);
+                  }}
+                >
+                  {t("scores.actions.editResult")}
+                </Button>
+                <Button
+                  colorScheme="red"
+                  variant="outline"
+                  isDisabled={actionsDisabled}
+                  onClick={() => {
+                    const target = mobileScoreActionsTarget;
+                    mobileScoreActionsDisclosure.onClose();
+                    if (target) openDelete(target);
+                  }}
+                >
+                  {t("common.actions.delete")}
+                </Button>
+              </HStack>
             )}
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+
+      <Modal isOpen={editDisclosure.isOpen} onClose={closeEditModal} isCentered size="md">
+        <ModalOverlay />
+        <ModalContent bg="brand.card" color="white">
+          <ModalHeader>{t("scores.editDialog.title")}</ModalHeader>
+          <ModalBody>
+            {editTarget && (
+              <Stack spacing={4}>
+                <Box fontWeight="medium">
+                  {editTarget.partner
+                    ? `${editTarget.athlete.name} / ${editTarget.partner.name}`
+                    : editTarget.athlete.name}
+                </Box>
+                <FormControl>
+                  <FormLabel display="flex" alignItems="center" gap={2} minH="32px">
+                    {t("scores.labels.result")}
+                    <InfoTooltip
+                      label={t("scores.help.result.ariaLabel")}
+                      content={t("scores.help.result.text")}
+                    />
+                  </FormLabel>
+                  <Box mb={3}>
+                    <MobileToggleGroup
+                      ariaLabel={t("scores.labels.result")}
+                      value={editScoreType}
+                      onChange={(v) => setEditScoreType(v)}
+                      options={[
+                        { value: "time", label: t("scores.resultOptions.finishedTime") },
+                        { value: "points", label: t("scores.resultOptions.didntFinishPoints") },
+                        { value: "weight", label: t("scores.resultOptions.weightLoad") },
+                      ]}
+                    />
+                  </Box>
+                  {editScoreType === "time" ? (
+                    <FormControl isRequired>
+                      <FormLabel>{t("scores.labels.time")}</FormLabel>
+                      <Input
+                        value={editTimeInput}
+                        onChange={(e) => setEditTimeInput(e.target.value)}
+                        placeholder={t("scores.placeholders.time")}
+                        bg="white"
+                        color="black"
+                      />
+                    </FormControl>
+                  ) : editScoreType === "points" ? (
+                    <FormControl isRequired>
+                      <FormLabel>{t("scores.labels.points")}</FormLabel>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={editPointsInput}
+                        onChange={(e) => setEditPointsInput(e.target.value)}
+                        bg="white"
+                        color="black"
+                      />
+                    </FormControl>
+                  ) : (
+                    <FormControl isRequired>
+                      <FormLabel>{t("scores.labels.weightKg")}</FormLabel>
+                      <Input
+                        type="number"
+                        min={0}
+                        step="any"
+                        value={editWeightInput}
+                        onChange={(e) => setEditWeightInput(e.target.value)}
+                        bg="white"
+                        color="black"
+                      />
+                    </FormControl>
+                  )}
+                </FormControl>
+              </Stack>
+            )}
+          </ModalBody>
+          <ModalFooter gap={2}>
+            <Button variant="ghost" onClick={closeEditModal}>
+              {t("common.actions.cancel")}
+            </Button>
+            <Button
+              colorScheme="orange"
+              onClick={() => void handleEditSave()}
+              isLoading={isLoading}
+              loadingText={t("scores.actions.saving")}
+              isDisabled={
+                !editTarget ||
+                (editScoreType === "time"
+                  ? parseTimeToSeconds(editTimeInput) == null
+                  : editScoreType === "points"
+                    ? !editPointsInput.trim() || !Number.isFinite(parseFloat(editPointsInput))
+                    : !editWeightInput.trim() || !Number.isFinite(parseFloat(editWeightInput)))
+              }
+            >
+              {t("common.actions.save")}
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
