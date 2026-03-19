@@ -202,10 +202,10 @@ export const LeaderboardPage = () => {
   const selectedPhaseName = phases.find((p) => String(p.id) === phaseId)?.name ?? "";
   const selectedLevelLabel = LEVEL_OPTIONS.find((o) => o.value === level)?.label ?? level;
   const selectedGenderLabel = gender === "FEMALE" ? t("gender.female") : t("gender.male");
-  const selectedEventLabel = isPhaseFinished
-    ? t("finalRanking")
-    : eventId
-      ? events.find((e) => String(e.id) === eventId)?.name ?? ""
+  const selectedEventLabel = eventId
+    ? (events.find((e) => String(e.id) === eventId)?.name ?? "")
+    : isPhaseFinished
+      ? t("finalRanking")
       : t("placeholders.allEvents");
   const showResultColumn = Boolean(eventId);
 

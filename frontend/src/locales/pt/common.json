@@ -29,6 +29,8 @@
     "history": "Histórico",
     "noHistory": "Nenhum histórico disponível.",
     "winnerPrefix": "Vencedor: ",
+    "placeAtEventPrefix": "{{ordinal}} lugar no evento \"",
+    "placeAtEventSuffix": "\"",
     "tags": {
       "singles": "INDIVIDUAL",
       "doubles": "DUPLAS",

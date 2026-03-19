@@ -51,10 +51,20 @@ type AthleteHistoryEntry = {
   athlete_result?: string | null;
 };
 
+function formatOrdinal(lang: string, rank: number): string {
+  const isPt = lang.startsWith("pt");
+  if (isPt) return `${rank}º`;
+  if (rank >= 10 && rank <= 20) return `${rank}th`;
+  const suffix = { 1: "st", 2: "nd", 3: "rd" }[rank % 10] ?? "th";
+  return `${rank}${suffix}`;
+}
+
+const PLACE_AT_EVENT_REGEX = /^(\d+)(?:st|nd|rd|th) Place at the "([^"]+)" Event$/;
+
 export const AthleteProfilePage = () => {
   const {id} = useParams<{id: string}>();
   const navigate = useNavigate();
-  const {t} = useTranslation(["common"]);
+  const {t, i18n} = useTranslation(["common"]);
   const [profile, setProfile] = useState<AthleteProfile | null>(null);
   const [history, setHistory] = useState<AthleteHistoryEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -300,6 +310,44 @@ export const AthleteProfilePage = () => {
                                 parts.push(winnerLine);
                               }
                               const tooltipText = parts.join("\n");
+
+                              const placeMatch = h.entry.match(PLACE_AT_EVENT_REGEX);
+                              if (placeMatch && placeMatch[2] === h.event_name) {
+                                const rank = parseInt(placeMatch[1], 10);
+                                const ordinal = formatOrdinal(i18n.language, rank);
+                                const prefix = (t as (key: string, opts?: Record<string, unknown>) => string)(
+                                  "athleteProfile.placeAtEventPrefix",
+                                  { ordinal },
+                                );
+                                const suffix = (t as (key: string) => string)("athleteProfile.placeAtEventSuffix");
+                                const eventNameNode = (
+                                  <Box
+                                    as="span"
+                                    textDecoration={tooltipText ? "underline" : undefined}
+                                    cursor={tooltipText ? "pointer" : undefined}
+                                    color="brand.link"
+                                  >
+                                    {h.event_name}
+                                  </Box>
+                                );
+                                return (
+                                  <>
+                                    {prefix}
+                                    {tooltipText ? (
+                                      <Tooltip
+                                        hasArrow
+                                        placement="top-start"
+                                        label={<Box whiteSpace="pre-line">{tooltipText}</Box>}
+                                      >
+                                        {eventNameNode}
+                                      </Tooltip>
+                                    ) : (
+                                      eventNameNode
+                                    )}
+                                    {suffix}
+                                  </>
+                                );
+                              }
 
                               const marker = `"${h.event_name}" Event`;
                               const idx = h.entry.indexOf(marker);

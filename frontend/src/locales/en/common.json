@@ -29,6 +29,8 @@
     "history": "History",
     "noHistory": "No history entries.",
     "winnerPrefix": "Winner: ",
+    "placeAtEventPrefix": "{{ordinal}} Place at the \"",
+    "placeAtEventSuffix": "\" Event",
     "tags": {
       "singles": "INDIVIDUAL",
       "doubles": "DOUBLES",
