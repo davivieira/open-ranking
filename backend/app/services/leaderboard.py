@@ -21,6 +21,28 @@ def _event_matches_gender(gender_category: GenderCategory, filter_gender: Gender
   return gender_category in (GenderCategory.FEMALE, GenderCategory.MIXED)
 
 
+def _format_score_result(score: Score) -> str | None:
+  """Format score as display string: time M:SS or H:MM:SS, or reps/points as string."""
+  if score.time_seconds is not None:
+    total = score.time_seconds
+    if total < 0:
+      return None
+    hours = int(total // 3600)
+    minutes = int((total % 3600) // 60)
+    seconds = int(total % 60)
+    ms = total - int(total)
+    if hours > 0:
+      base = f"{hours}:{minutes:02d}:{seconds:02d}"
+    else:
+      base = f"{minutes}:{seconds:02d}"
+    if ms > 0:
+      base += f".{int(round(ms * 10))}"
+    return base
+  if score.reps_points is not None:
+    return str(score.reps_points)
+  return None
+
+
 def get_leaderboard(
   db: Session,
   *,
@@ -75,9 +97,9 @@ def get_leaderboard(
       and (e.event_type == EventType.DOUBLES if is_doubles else e.event_type == EventType.SINGLES)
     }
 
-  # value: (total_pts, event_count, victories_count, best_single_event_rank, ref)
+  # value: (total_pts, event_count, victories_count, best_single_event_rank, ref, event_result_str | None)
   _BIG = 999999
-  totals: dict[tuple, tuple[float, int, int, int, Union[AthleteRef, AthletePairRef]]] = {}
+  totals: dict[tuple, tuple[float, int, int, int, Union[AthleteRef, AthletePairRef], str | None]] = {}
 
   for s in scores:
     pts = s.points_awarded or 0
@@ -116,20 +138,23 @@ def get_leaderboard(
       key = (s.athlete_id,)
       ref = AthleteRef(id=a.id, name=a.name)
 
+    event_result_str: str | None = _format_score_result(s) if event_id is not None else None
+
     if key in totals:
-      prev_pts, prev_cnt, prev_wins, prev_best, _ = totals[key]
+      prev_pts, prev_cnt, prev_wins, prev_best, _, prev_result = totals[key]
       totals[key] = (
         prev_pts + pts,
         prev_cnt + 1,
         prev_wins + victory,
         min(prev_best, best_rank),
         ref,
+        prev_result if event_id is not None else None,
       )
     else:
-      totals[key] = (pts, 1, victory, best_rank, ref)
+      totals[key] = (pts, 1, victory, best_rank, ref, event_result_str)
 
   def _sort_key(item: tuple) -> tuple:
-    key, (total_pts, ev_count, victories, best_rank, _) = item
+    key, (total_pts, ev_count, victories, best_rank, _, _) = item
     return (-total_pts, -victories, best_rank, key)
 
   sorted_items = sorted(totals.items(), key=_sort_key)
@@ -138,7 +163,7 @@ def get_leaderboard(
   prev_rank_key: tuple[float, int, int | None] | None = None
   rank = 1
 
-  for i, (key, (total_pts, ev_count, victories, best_rank, ref)) in enumerate(sorted_items):
+  for i, (key, (total_pts, ev_count, victories, best_rank, ref, entry_result)) in enumerate(sorted_items):
     rank_key = (total_pts, victories, best_rank if victories == 0 else None)
     if rank_key != prev_rank_key:
       rank = i + 1
@@ -151,6 +176,7 @@ def get_leaderboard(
           athlete_pair=ref,
           total_points=total_pts,
           event_count=ev_count,
+          event_result=entry_result,
         )
       )
     else:
@@ -160,6 +186,7 @@ def get_leaderboard(
           athlete=ref,
           total_points=total_pts,
           event_count=ev_count,
+          event_result=entry_result,
         )
       )
 

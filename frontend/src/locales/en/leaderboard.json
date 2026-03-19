@@ -1,10 +1,10 @@
 {
   "title": "{{competition}} – Leaderboard",
   "filters": {
-    "stage": "Stage (Phase)",
+    "stage": "Competition",
     "level": "Level",
     "gender": "Gender",
-    "eventOptional": "Event (optional)"
+    "eventOptional": "Event"
   },
   "placeholders": {
     "selectStage": "Select stage",
@@ -23,6 +23,7 @@
   "table": {
     "rank": "Rank",
     "athletes": "Athlete(s)",
+    "result": "Result",
     "totalPoints": "Total points",
     "events": "Events"
   },
@@ -30,4 +31,3 @@
     "noScores": "No scores yet for this combination."
   }
 }
-

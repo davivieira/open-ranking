@@ -21,3 +21,4 @@ class LeaderboardEntry(BaseModel):
   athlete_pair: Optional[AthletePairRef] = None
   total_points: float
   event_count: int = 0
+  event_result: Optional[str] = None

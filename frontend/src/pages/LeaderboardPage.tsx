@@ -28,10 +28,11 @@ import {
 } from "@chakra-ui/react";
 import { Link as RouterLink, useParams, useSearchParams } from "react-router-dom";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment } from "react";
 import { useTranslation } from "react-i18next";
 import { MoonIcon, SunIcon } from "@chakra-ui/icons";
 import { apiClient, API_BASE_URL } from "../lib/apiClient";
-import { exportElementToPdf } from "../lib/exportToPdf";
+import { exportElementToPdf, exportPagesToPdf } from "../lib/exportToPdf";
 import { useAuthStore } from "../state/authStore";
 
 type Competition = { id: number; name: string; slug: string; public_slug: string; type: string };
@@ -52,6 +53,7 @@ type LeaderboardEntry = {
   athlete_pair?: { athlete1: { id: number; name: string }; athlete2: { id: number; name: string } };
   total_points: number;
   event_count: number;
+  event_result?: string;
 };
 
 const LEVEL_OPTIONS = [
@@ -80,6 +82,7 @@ export const LeaderboardPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const leaderboardCardRef = useRef<HTMLDivElement>(null);
+  const pdfPagesRef = useRef<HTMLDivElement>(null);
 
   const phaseId = searchParams.get("phase") || "";
   const level = searchParams.get("level") || "RX";
@@ -204,6 +207,7 @@ export const LeaderboardPage = () => {
     : eventId
       ? events.find((e) => String(e.id) === eventId)?.name ?? ""
       : t("placeholders.allEvents");
+  const showResultColumn = Boolean(eventId);
 
   const medalForRank = (rank: number): string => {
     if (rank === 1) return "🥇";
@@ -211,6 +215,11 @@ export const LeaderboardPage = () => {
     if (rank === 3) return "🥉";
     return "";
   };
+
+  const pdfFilename =
+    competition && phaseId
+      ? `leaderboard-${[competition.public_slug, phaseId, gender, level].join("-").replace(/\s+/g, "-")}`
+      : "leaderboard-export";
 
   const handleExport = async (format: "csv") => {
     if (!competition || !phaseId) return;
@@ -237,15 +246,23 @@ export const LeaderboardPage = () => {
   };
 
   const handleDownloadPdf = async () => {
-    if (!leaderboardCardRef.current || !competition || !phaseId) return;
+    if (!competition || !phaseId) return;
     setPdfLoading(true);
     try {
-      // Allow a paint so the PDF-only summary becomes visible for capture.
-      await new Promise((r) => setTimeout(r, 50));
-      await exportElementToPdf(
-        leaderboardCardRef.current,
-        `leaderboard-${competition.public_slug}-${phaseId}`,
-      );
+      await new Promise((r) => requestAnimationFrame(r));
+      await new Promise((r) => setTimeout(r, 150));
+      if (entries.length === 0) {
+        if (leaderboardCardRef.current) {
+          await exportElementToPdf(leaderboardCardRef.current, pdfFilename);
+        }
+        return;
+      }
+      if (pdfPagesRef.current) {
+        const pages = Array.from(pdfPagesRef.current.children) as HTMLElement[];
+        if (pages.length > 0) {
+          await exportPagesToPdf(pages, pdfFilename, { backgroundColor: "#1C1130" });
+        }
+      }
     } finally {
       setPdfLoading(false);
     }
@@ -452,6 +469,7 @@ export const LeaderboardPage = () => {
                 <Tr>
                   <Th>{t("table.rank")}</Th>
                   <Th>{t("table.athletes")}</Th>
+                  {showResultColumn && <Th>{t("table.result")}</Th>}
                   <Th isNumeric>{t("table.totalPoints")}</Th>
                   <Th isNumeric>{t("table.events")}</Th>
                 </Tr>
@@ -505,6 +523,7 @@ export const LeaderboardPage = () => {
                         "—"
                       )}
                     </Td>
+                    {showResultColumn && <Td>{row.event_result ?? "—"}</Td>}
                     <Td isNumeric>{row.total_points}</Td>
                     <Td isNumeric>{row.event_count}</Td>
                   </Tr>
@@ -518,6 +537,112 @@ export const LeaderboardPage = () => {
             </Box>
           )}
         </Box>
+
+        {pdfLoading && competition && (
+          <Box position="fixed" left="-9999px" top={0} zIndex={-1} ref={pdfPagesRef} aria-hidden="true">
+            {Array.from({
+              length: Math.max(1, Math.ceil(entries.length / 10)),
+            }).map((_, pageIndex) => (
+              <Box
+                key={pageIndex}
+                w="794px"
+                h="1123px"
+                bg="#1C1130"
+                p={4}
+                boxSizing="border-box"
+              >
+                <Heading size="md" color="brand.pageTitle" mb={4}>
+                  {t("title", { competition: competition.name })}
+                </Heading>
+                <Box mb={4} color="brand.subtleText" fontSize="sm">
+                  <Flex gap={4} flexWrap="wrap">
+                    <Box>
+                      <Box as="span" fontWeight="semibold">{t("filters.stage")}:</Box>{" "}
+                      {selectedPhaseName || "—"}
+                    </Box>
+                    <Box>
+                      <Box as="span" fontWeight="semibold">{t("filters.level")}:</Box>{" "}
+                      {selectedLevelLabel || "—"}
+                    </Box>
+                    <Box>
+                      <Box as="span" fontWeight="semibold">{t("filters.gender")}:</Box>{" "}
+                      {selectedGenderLabel || "—"}
+                    </Box>
+                    <Box>
+                      <Box as="span" fontWeight="semibold">{t("filters.eventOptional")}:</Box>{" "}
+                      {selectedEventLabel || "—"}
+                    </Box>
+                  </Flex>
+                </Box>
+                <Table variant="simple" size="md">
+                  <Thead bg="whiteAlpha.100">
+                    <Tr>
+                      <Th color="brand.text">{t("table.rank")}</Th>
+                      <Th color="brand.text">{t("table.athletes")}</Th>
+                      {showResultColumn && <Th color="brand.text">{t("table.result")}</Th>}
+                      <Th isNumeric color="brand.text">{t("table.totalPoints")}</Th>
+                      <Th isNumeric color="brand.text">{t("table.events")}</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {entries
+                      .slice(pageIndex * 10, pageIndex * 10 + 10)
+                      .map((row, idx) => (
+                        <Tr key={`${pageIndex}-${idx}-${row.athlete?.id ?? `${row.athlete_pair?.athlete1.id}-${row.athlete_pair?.athlete2.id}`}`}>
+                          <Td color="brand.text">{row.rank}</Td>
+                          <Td color="brand.text">
+                            {row.athlete ? (
+                              <>
+                                <Box as="span" color="brand.link">
+                                  {row.athlete.name.split(/\s+/).filter(Boolean).map((part, i) => (
+                                    <Fragment key={i}>
+                                      {i > 0 ? <Box as="span" mx={1.5} /> : null}
+                                      {part}
+                                    </Fragment>
+                                  ))}
+                                </Box>
+                                {isPhaseFinished && medalForRank(row.rank) && (
+                                  <Box as="span" ml={2}>{medalForRank(row.rank)}</Box>
+                                )}
+                              </>
+                            ) : row.athlete_pair ? (
+                              <Flex gap={2} flexWrap="wrap">
+                                <Box as="span" color="brand.link">
+                                  {row.athlete_pair.athlete1.name.split(/\s+/).filter(Boolean).map((part, i) => (
+                                    <Fragment key={i}>
+                                      {i > 0 ? <Box as="span" mx={1.5} /> : null}
+                                      {part}
+                                    </Fragment>
+                                  ))}
+                                </Box>
+                                <Box as="span">/</Box>
+                                <Box as="span" color="brand.link">
+                                  {row.athlete_pair.athlete2.name.split(/\s+/).filter(Boolean).map((part, i) => (
+                                    <Fragment key={i}>
+                                      {i > 0 ? <Box as="span" mx={1.5} /> : null}
+                                      {part}
+                                    </Fragment>
+                                  ))}
+                                </Box>
+                                {isPhaseFinished && medalForRank(row.rank) && (
+                                  <Box as="span" ml={2}>{medalForRank(row.rank)}</Box>
+                                )}
+                              </Flex>
+                            ) : (
+                              "—"
+                            )}
+                          </Td>
+                          {showResultColumn && <Td color="brand.text">{row.event_result ?? "—"}</Td>}
+                          <Td isNumeric color="brand.text">{row.total_points}</Td>
+                          <Td isNumeric color="brand.text">{row.event_count}</Td>
+                        </Tr>
+                      ))}
+                  </Tbody>
+                </Table>
+              </Box>
+            ))}
+          </Box>
+        )}
       </Container>
     </Box>
   );

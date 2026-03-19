@@ -63,9 +63,14 @@ def export_leaderboard(
   slug_safe = f"c{competition_id}-p{phase_id}"
   buf = io.StringIO()
   w = csv.writer(buf)
-  w.writerow(["Rank", "Athlete(s)", "Total points", "Events"])
-  for e in entries:
-    w.writerow([e.rank, _athlete_display(e), e.total_points, e.event_count])
+  if event_id is not None:
+    w.writerow(["Rank", "Athlete(s)", "Result", "Total points", "Events"])
+    for e in entries:
+      w.writerow([e.rank, _athlete_display(e), e.event_result or "", e.total_points, e.event_count])
+  else:
+    w.writerow(["Rank", "Athlete(s)", "Total points", "Events"])
+    for e in entries:
+      w.writerow([e.rank, _athlete_display(e), e.total_points, e.event_count])
   body = buf.getvalue().encode("utf-8")
   return Response(
     content=body,
